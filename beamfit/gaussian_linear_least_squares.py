@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Dict, Union, Any
+from typing import Union, Any
 
 from .base import AnalysisMethod, Setting
 from .utils import SuperGaussianResult
@@ -114,10 +114,10 @@ class GaussianLinearLeastSquares(AnalysisMethod):
         # Return the fit
         return SuperGaussianResult(h=h, c=c)
 
-    def __get_settings__(self) -> List[Setting]:
+    def __get_settings__(self) -> list[Setting]:
         return []
 
-    def __set_from_settings__(self, settings: Dict[str, Union[str, Dict[str, Any]]]):
+    def __set_from_settings__(self, settings: dict[str, Union[str, dict[str, Any]]]):
         pass
 
 

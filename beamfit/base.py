@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy as np
 import scipy.signal as signal
 from dataclasses import dataclass
-from typing import List, Dict, Union, Any
+from typing import Union, Any
 from abc import ABC
 
 
@@ -11,8 +11,8 @@ class Setting:
     name: str
     default: str
     stype: str = "str"  # can be 'str', 'list', 'settings_list'
-    list_values: List[str] = None  # Options used with 'list' type
-    list_settings: Dict[str, List[Setting]] = (
+    list_values: list[str] = None  # Options used with 'list' type
+    list_settings: dict[str, list[Setting]] = (
         None  # Map from names in list_values to lists of settings for that option
     )
 
@@ -59,7 +59,7 @@ class AnalysisMethod(ABC):
     def __get_config_dict__(self):
         return {}
 
-    def get_settings(self) -> List[Setting]:
+    def get_settings(self) -> list[Setting]:
         arr = [
             Setting("Sigma Threshold", "Off", stype="list", list_values=["Off", "On"]),
             Setting("Sigma Threshold Size", "3.0"),
@@ -68,10 +68,10 @@ class AnalysisMethod(ABC):
         ]
         return arr + self.__get_settings__()
 
-    def __get_settings__(self) -> List[Setting]:
+    def __get_settings__(self) -> list[Setting]:
         raise NotImplementedError()
 
-    def set_from_settings(self, settings: Dict[str, str]):
+    def set_from_settings(self, settings: list[str, str]):
         if settings["Sigma Threshold"] == "On":
             sigma_threshold = float(settings["Sigma Threshold Size"])
             if sigma_threshold <= 0.0:
@@ -104,7 +104,7 @@ class AnalysisMethod(ABC):
             )
         self.__set_from_settings__(settings)
 
-    def __set_from_settings__(self, settings: Dict[str, Union[str, Dict[str, Any]]]):
+    def __set_from_settings__(self, settings: dict[str, Union[str, dict[str, Any]]]):
         raise NotImplementedError()
 
 

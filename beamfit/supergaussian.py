@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.optimize as opt
-from typing import List, Dict, Union, Any
+from typing import Union, Any
 
 from . import factory
 from .base import AnalysisMethod, Setting
@@ -152,7 +152,7 @@ class SuperGaussian(AnalysisMethod):
             "maxfev": self.maxfev,
         }
 
-    def __get_settings__(self) -> List[Setting]:
+    def __get_settings__(self) -> list[Setting]:
         pred_funs = [x for x in factory.get_names("analysis") if x != "SuperGaussian"]
         pred_fun_settings = {
             x: factory.create("analysis", x).get_settings() for x in pred_funs
@@ -174,7 +174,7 @@ class SuperGaussian(AnalysisMethod):
             Setting("Max Function Evaluation", "100"),
         ]
 
-    def __set_from_settings__(self, settings: Dict[str, Union[str, Dict[str, Any]]]):
+    def __set_from_settings__(self, settings: dict[str, Union[str, dict[str, Any]]]):
         self.predfun = factory.create(
             "analysis", settings["Intial Prediction Method"]["name"]
         )
