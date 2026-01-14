@@ -1,4 +1,4 @@
-from .utils import AnalysisMethod
+from .base import AnalysisMethod
 
 
 class AnalysisMethodDebugger(AnalysisMethod):

@@ -1,7 +1,8 @@
 import numpy as np
 from typing import List, Dict, Union, Any
 
-from .utils import AnalysisMethod, SuperGaussianResult, Setting
+from .base import AnalysisMethod, Setting
+from .utils import SuperGaussianResult
 
 
 def x_to_h(x):
