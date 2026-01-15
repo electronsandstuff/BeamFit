@@ -13,4 +13,5 @@ dependencies:
   - build
   - pytest
   - pytest-cov
+  - pytest-benchmark
   - pre-commit
