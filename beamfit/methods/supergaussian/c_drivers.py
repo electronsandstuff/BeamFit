@@ -4,7 +4,7 @@ import numpy as np
 
 def supergaussian(x, y, mu_x, mu_y, sigma_xx, sigma_xy, sigma_yy, n, a, o):
     """
-    Compiled (fast) numpy compatible ufunc which computes the bivariate super-Gaussian function
+    Compiled numpy compatible ufunc which computes the bivariate super-Gaussian function
       f(r) = a*exp(-(1/2(r - mu)^T Sigma^{-1} (r - mu))^n) + o
     where r is the vector {x, y}, mu is the centroid vector {mu_x, mu_y}, and Sigma is the covariance matrix
     {{sigma_xx, sigma_xy}, {sigma_xy, sigma_yy}}.
