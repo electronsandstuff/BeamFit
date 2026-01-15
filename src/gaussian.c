@@ -33,29 +33,29 @@ static void double_supergaussian_internal(char **args, const long *dimensions, c
     npy_intp n = dimensions[0];
     double *args_copy[11];
 
-    // // Copy over the args to hold onto their pointers
-    // for(j=0; j<11; j++){
-    //   args_copy[j] = (double *)(args[j]);
-    // }
+    // Copy over the args to hold onto their pointers
+    for(j=0; j<11; j++){
+      args_copy[j] = (double *)(args[j]);
+    }
 
-    // double TMP_177, TMP_171, TMP_179;
-    // for (i=0; i<n; i++) {
-    //     TMP_177 = 1/(-1*(*args_copy[5])*(*args_copy[5]) + (*args_copy[4])\
-    //       *(*args_copy[6]));
-    //     TMP_171 = *args_copy[1] - *args_copy[3];
-    //     TMP_179 = *args_copy[0] - *args_copy[2];
-    //     *args_copy[10]  = *args_copy[8];
-    //     *args_copy[10] /= exp(pow(fabs(TMP_171*(*args_copy[4]*TMP_171*TMP_177\
-    //       -*args_copy[5]*TMP_177*TMP_179) + TMP_179*(-(*args_copy[5]*TMP_171\
-    //         *TMP_177)+*args_copy[6]*TMP_177*TMP_179)), *args_copy[7])/\
-    //         pow(2.0, *args_copy[7]));
-    //     *args_copy[10] += *args_copy[9];
+    double TMP_177, TMP_171, TMP_179;
+    for (i=0; i<n; i++) {
+        TMP_177 = 1/(-1*(*args_copy[5])*(*args_copy[5]) + (*args_copy[4])\
+          *(*args_copy[6]));
+        TMP_171 = *args_copy[1] - *args_copy[3];
+        TMP_179 = *args_copy[0] - *args_copy[2];
+        *args_copy[10]  = *args_copy[8];
+        *args_copy[10] /= exp(pow(fabs(TMP_171*(*args_copy[4]*TMP_171*TMP_177\
+          -*args_copy[5]*TMP_177*TMP_179) + TMP_179*(-(*args_copy[5]*TMP_171\
+            *TMP_177)+*args_copy[6]*TMP_177*TMP_179)), *args_copy[7])/\
+            pow(2.0, *args_copy[7]));
+        *args_copy[10] += *args_copy[9];
 
-    //     // Increment the pointers
-    //     for(j=0; j<11; j++){
-    //       args_copy[j] = (double *) ((char *)args_copy[j] + steps[j]);
-    //     }
-    // }
+        // Increment the pointers
+        for(j=0; j<11; j++){
+          args_copy[j] = (double *) ((char *)args_copy[j] + steps[j]);
+        }
+    }
 }
 
 static void double_supergaussian_grad_internal(char **args, const long *dimensions, const long* steps, void* data){
