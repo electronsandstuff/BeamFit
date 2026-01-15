@@ -1,24 +1,32 @@
 from __future__ import annotations
 import numpy as np
 import scipy.special as special
-import scipy.signal as signal
+
 from . import factory
-from dataclasses import dataclass
-from typing import List, Dict, Union, Any
+from .base import AnalysisMethod, AnalysisResult
 
 
-@dataclass
-class Setting:
-    name: str
-    default: str
-    stype: str = "str"  # can be 'str', 'list', 'settings_list'
-    list_values: List[str] = None  # Options used with 'list' type
-    list_settings: Dict[str, List[Setting]] = (
-        None  # Map from names in list_values to lists of settings for that option
-    )
+def get_image_and_weight(
+    raw_images: list[np.ndarray], dark_fields: list[np.ndarray], mask: np.ndarray
+):
+    """
+    Convenience function to get an averaged and background subtracked image combined with a weighting value for each pixel
+    based on the amount of noise in it.
 
+    Parameters
+    ----------
+    raw_images : list[np.ndarray]
+        The images of the beam to process
+    dark_fields : list[np.ndarray]
+        Images without the beam for background subtraction
+    mask : np.ndarray
+        A boolean image where a true pixel excludes it from fitting
 
-def get_image_and_weight(raw_images, dark_fields, mask):
+    Returns
+    -------
+    np.ndarray, np.ndarray
+        The processed image and its weights
+    """
     image = np.ma.masked_array(
         data=np.mean(raw_images, axis=0) - np.mean(dark_fields, axis=0), mask=mask
     )
@@ -32,97 +40,6 @@ def get_image_and_weight(raw_images, dark_fields, mask):
     return image, image_weight
 
 
-class AnalysisMethod:
-    def __init__(self, sigma_threshold=None, median_filter_size=None):
-        self.sigma_threshold = sigma_threshold
-        self.median_filter_size = median_filter_size
-
-    def fit(self, image, image_sigmas=None):
-        """
-        Measure the RMS size and centroid of the supplied image. If the image is passed as a masked array then
-        (depending on support by the fitting method) only unmasked pixels are considered. This can be useful for
-        selecting oddly shaped regions of interest.
-
-        :param image: 2D np.ndarray or np.ma.array, the image as a grayscale array or masked array of pixels
-        :param image_sigmas: (optional) the uncertainty in each pixel intensity
-        :return: AnalysisResult object (depends on analysis method)
-        """
-        if not np.ma.isMaskedArray(image):  # Make a mask if there isn't one
-            image = np.ma.array(image)
-        if self.median_filter_size is not None:  # Median filter the image if required
-            image = np.ma.array(
-                signal.medfilt2d(image, kernel_size=self.median_filter_size),
-                mask=image.mask,
-            )
-        if self.sigma_threshold is not None:  # Apply threshold if provided
-            image.mask = np.bitwise_or(
-                image.mask, image < (image.max() * np.exp(-(self.sigma_threshold**2)))
-            )
-        return self.__fit__(image, image_sigmas)
-
-    def __fit__(self, image, image_sigmas=None):
-        raise NotImplementedError
-
-    def get_config_dict(self):
-        ret = {
-            "sigma_threshold": self.sigma_threshold,
-            "median_filter_size": self.median_filter_size,
-        }
-        ret.update(self.__get_config_dict__())
-        return ret
-
-    def __get_config_dict__(self):
-        return {}
-
-    def get_settings(self) -> List[Setting]:
-        arr = [
-            Setting("Sigma Threshold", "Off", stype="list", list_values=["Off", "On"]),
-            Setting("Sigma Threshold Size", "3.0"),
-            Setting("Median Filter", "Off", stype="list", list_values=["Off", "On"]),
-            Setting("Median Filter Size", "3"),
-        ]
-        return arr + self.__get_settings__()
-
-    def __get_settings__(self) -> List[Setting]:
-        raise NotImplementedError()
-
-    def set_from_settings(self, settings: Dict[str, str]):
-        if settings["Sigma Threshold"] == "On":
-            sigma_threshold = float(settings["Sigma Threshold Size"])
-            if sigma_threshold <= 0.0:
-                raise ValueError(
-                    f"Sigma threshold must be greater than zero, got {sigma_threshold}"
-                )
-            self.sigma_threshold = sigma_threshold
-        elif settings["Sigma Threshold"] == "Off":
-            self.sigma_threshold = None
-        else:
-            raise ValueError(
-                f'Unrecognized value for "Sigma Threshold": "{settings["Sigma Threshold"]}"'
-            )
-        if settings["Median Filter"] == "On":
-            median_filter_size = int(settings["Median Filter Size"])
-            if median_filter_size < 3:
-                raise ValueError(
-                    f"Median filter size must be at least 3, got {median_filter_size}"
-                )
-            if median_filter_size % 2 == 0:
-                raise ValueError(
-                    f"Median filter size must be odd integer, not {median_filter_size}"
-                )
-            self.median_filter_size = median_filter_size
-        elif settings["Median Filter"] == "Off":
-            self.median_filter_size = None
-        else:
-            raise ValueError(
-                f'Unrecognized value for "Median Filter": "{settings["Median Filter"]}"'
-            )
-        self.__set_from_settings__(settings)
-
-    def __set_from_settings__(self, settings: Dict[str, Union[str, Dict[str, Any]]]):
-        raise NotImplementedError()
-
-
 def get_config_dict_analysis_method(m: AnalysisMethod):
     return {"type": type(m).__name__, "config": m.get_config_dict()}
 
@@ -131,25 +48,38 @@ def create_analysis_method_from_dict(d):
     return factory.create("analysis", d["type"], **d["config"])
 
 
-class AnalysisResult:
-    def get_mean(self):
-        raise NotImplementedError
+def super_gaussian_scaling_factor(n: float) -> float:
+    """
+    Factor applied to the internal covariance-matrix-like parameters of the supergaussian function to convert it
+    to the actual covariance matrix (ie Sigma = f(n) * Sigma_{sg}).
 
-    def get_covariance_matrix(self):
-        raise NotImplementedError
+    Parameters
+    ----------
+    n : float
+        Supergaussian parameter n
 
-    def get_mean_std(self):
-        return None
-
-    def get_covariance_matrix_std(self):
-        return None
-
-
-def super_gaussian_scaling_factor(n):
+    Returns
+    -------
+    float
+        The conversion factor
+    """
     return special.gamma((2 + n) / n) / 2 / special.gamma(1 + 1 / n)
 
 
 def super_gaussian_scaling_factor_grad(n):
+    """
+    The derivative of `super_gaussian_scaling_factor` for uncertainty propogation.
+
+    Parameters
+    ----------
+    n : float
+        Supergaussian parameter n
+
+    Returns
+    -------
+    float
+        Derivative of the conversion factor
+    """
     n = n
     scaling_factor_deriv = (
         special.gamma((2 + n) / n) / 2 / n**2 * special.polygamma(0, 1 + 1 / n)
@@ -165,6 +95,11 @@ def super_gaussian_scaling_factor_grad(n):
 
 
 class SuperGaussianResult(AnalysisResult):
+    """
+    Represents the results of a fitting process where the model takes the form of a supergaussian (or gaussian where
+    `n` is set to 1)
+    """
+
     def __init__(
         self, mu=np.zeros(2), sigma=np.identity(2), a=1.0, o=0.0, n=1.0, c=None, h=None
     ):

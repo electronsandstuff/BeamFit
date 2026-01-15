@@ -1,11 +1,16 @@
 import numpy as np
 from scipy import special, optimize as opt
-from typing import List, Dict, Union, Any
+from typing import Union, Any
 
-from .utils import AnalysisMethod, SuperGaussianResult, Setting
+from ..base import AnalysisMethod, Setting
+from ..utils import SuperGaussianResult
 
 
 class GaussianProfile1D(AnalysisMethod):
+    """
+    Calculate the centroid and beam moments from the marginal distributions on the X and Y axis which are fit to Gaussians.
+    """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -104,10 +109,10 @@ class GaussianProfile1D(AnalysisMethod):
         ret = SuperGaussianResult(h=h, c=c_all)
         return ret
 
-    def __get_settings__(self) -> List[Setting]:
+    def __get_settings__(self) -> list[Setting]:
         return []
 
-    def __set_from_settings__(self, settings: Dict[str, Union[str, Dict[str, Any]]]):
+    def __set_from_settings__(self, settings: dict[str, Union[str, dict[str, Any]]]):
         pass
 
 

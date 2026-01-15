@@ -1,9 +1,17 @@
 import numpy as np
-from .utils import AnalysisMethod, SuperGaussianResult, Setting
-from typing import List, Dict, Union, Any
+from typing import Union, Any
+
+from ..base import AnalysisMethod, Setting
+from ..utils import SuperGaussianResult
 
 
 class RMSIntegration(AnalysisMethod):
+    """
+    Estimate beam centroids and beam moments by numerically integrating the distribution. Ie
+    $\sigma_{x,y} = \sqrt{E[{x,y}^2] - E[{x,y}]^2}$. Where the expectation value is calculated as
+    $E[g(x,y)] = \int\int f(x,y)*g(x,y)*dx*dy$ for the normalized distribution $f(x,y)$.
+    """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -31,8 +39,8 @@ class RMSIntegration(AnalysisMethod):
             mu=mu, sigma=nu - mu[:, None] * mu[None, :], a=(hi - lo), o=lo
         )
 
-    def __get_settings__(self) -> List[Setting]:
+    def __get_settings__(self) -> list[Setting]:
         return []
 
-    def __set_from_settings__(self, settings: Dict[str, Union[str, Dict[str, Any]]]):
+    def __set_from_settings__(self, settings: dict[str, Union[str, dict[str, Any]]]):
         pass

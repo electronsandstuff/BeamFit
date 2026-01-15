@@ -11,9 +11,6 @@ dependencies:
   - setuptools
   - wheel
   - build
-  - gcc_linux-64     # Linux
-  - gcc_impl_linux-64  # Linux
-  - gfortran_linux-64  # Linux (for scipy/numpy deps)
   - pytest
   - pytest-cov
   - pre-commit

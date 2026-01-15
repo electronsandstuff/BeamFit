@@ -1,9 +1,9 @@
-"""
-Many transformations in this section are from the paper Pinheiro, J. C., & Bates, D. M. (1996). Unconstrained
-Parameterizations for Variance-Covariance Matrices. Statistics and Computing, 6, 289–296.
-"""
-
 import numpy as np
+
+
+###############################################################################
+# Numerical functions for transformations and their derivatives
+###############################################################################
 
 
 def eigen2d(s):
@@ -66,6 +66,14 @@ def a_to_theta(a):
 def a_to_theta_grad(a):
     b = np.exp(a)
     return b * np.pi / (1 + b) - b**2 * np.pi / (1 + b) ** 2
+
+
+###############################################################################
+# Covariance Matrix Parameterizations
+#   Many of the parameterizations included below are from the article:
+#     J. C., & Bates, D. M. (1996). Unconstrained Parameterizations for
+#     Variance-Covariance Matrices. Statistics and Computing, 6, 289–296.
+###############################################################################
 
 
 class SigmaParameterization:
