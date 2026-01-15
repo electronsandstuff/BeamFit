@@ -9,6 +9,11 @@ from .c_drivers import supergaussian, supergaussian_grad
 
 
 class SuperGaussian(AnalysisMethod):
+    """
+    Fit a superguassian model to the image and extract beam centroids, moments.
+      f(r) = a*exp(-(1/2(r - mu)^T Sigma^{-1} (r - mu))^n) + o
+    """
+
     def __init__(
         self,
         predfun="GaussianProfile1D",
