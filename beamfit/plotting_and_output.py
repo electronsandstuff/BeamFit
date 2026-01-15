@@ -6,6 +6,20 @@ from .fit_param_conversion import get_mu_sigma_std, get_mu_sigma
 
 
 def pretty_print_loc_and_size(h, C, pixel_size, pixel_size_std):
+    """
+    Print the fit parameters and standard deviations nicely.
+
+    Parameters
+    ----------
+    h : np.ndarray
+        Parameters of best fit for supergaussian model
+    c : np.ndarray
+        Covariance matrix of the parameters of best fit
+    pixel_size : float
+        Conversion from pixel size to the size of the image
+    pixel_size_std : float
+        Standard deviation in the pixel size
+    """
     # Pull out the components
     mu, sigma = get_mu_sigma(h, pixel_size)
     mu_std, sigma_std = get_mu_sigma_std(h, C, pixel_size, pixel_size_std)
@@ -26,6 +40,18 @@ def pretty_print_loc_and_size(h, C, pixel_size, pixel_size_std):
 
 
 def plot_residuals(image, h, sigma_threshold=2):
+    """
+    Plot the residuals of the image.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        The image that was fit to
+    h : np.ndarray
+        Parameters of best fit for supergaussian model
+    sigma_threshold : int, optional
+        Mask image values below this level, by default 2
+    """
     # Calculate the threshold
     threshold = np.exp(-1 * sigma_threshold**2 / 2)
 
@@ -40,6 +66,16 @@ def plot_residuals(image, h, sigma_threshold=2):
 
 
 def plot_beam_contours(image, h):
+    """
+    Plot the beam's contours from the fit.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        The image that was fit to
+    h : np.ndarray
+        Parameters of best fit for supergaussian model
+    """
     plt.imshow(image)
     M, N = np.mgrid[: image.shape[0], : image.shape[1]]
     gauss = supergaussian(M, N, *h)
@@ -47,6 +83,16 @@ def plot_beam_contours(image, h):
 
 
 def plot_threshold(image, sigma_threshold=4):
+    """
+    Plot a thresholded version of the image (clipped by both mask and image value).
+
+    Parameters
+    ----------
+    image : np.ndarray
+        The image that was fit to
+    sigma_threshold : int, optional
+        How many std. deviations to include assuming Gaussian beam, by default 4
+    """
     # Calculate the threshold
     threshold = np.exp(-1 * sigma_threshold**2 / 2)
 
