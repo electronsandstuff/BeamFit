@@ -6,6 +6,20 @@ from ..utils import SuperGaussianResult
 
 
 def x_to_h(x):
+    """
+    Conversion from the fit parameters used internally in `GaussianLinearLeastSquares` to the parameters of the Gaussian.
+    Output is in the form of the vector `h` used for the supergaussian with n=1.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        The parameters of best fit from `GaussianLinearLeastSquares`
+
+    Returns
+    -------
+    np.ndarray
+        The parameters of best fit for the Gaussian, but parameterized as `h` used for the supergaussian method.
+    """
     return np.array(
         [
             (-1 * x[3] * x[4] + 2 * x[1] * x[5]) / (x[4] ** 2 - 4 * x[2] * x[5]),
@@ -21,6 +35,19 @@ def x_to_h(x):
 
 
 def x_to_h_grad(x):
+    """
+    The Jacobian of `x_to_h`, used to propogate errors through the fit.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        The parameters of best fit from `GaussianLinearLeastSquares`
+
+    Returns
+    -------
+    np.ndarray
+        The 7x7 Jacobian matrix of `x_to_h`
+    """
     j = np.zeros((8, 8))
     j[0, 1] = (2 * x[5]) / (x[4] ** 2 - 4 * x[2] * x[5])
     j[0, 2] = (
@@ -73,6 +100,15 @@ def x_to_h_grad(x):
 
 
 class GaussianLinearLeastSquares(AnalysisMethod):
+    """
+    Fit a Gaussian model to image using linear fitting of the log of the image.
+
+    The log of a Gaussian is f(x, y) = a + b*x + c*y + d*x^2 + e*y^2 + f*x*y which is linear in the model parameters.
+
+    The non-linear transformation of the image is dealt with by weighting points according to their amplitude (ie y = exp(x),
+    sigma_y = exp(x)*sigma_x) so that the fit minimizes least squared errors of the pre-transformed image.
+    """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
