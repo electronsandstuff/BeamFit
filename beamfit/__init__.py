@@ -21,7 +21,7 @@ from .utils import (
     super_gaussian_scaling_factor_grad,
     SuperGaussianResult,
 )
-from .sigma_transformations import (
+from .methods.supergaussian.sigma_transformations import (
     Cholesky,
     LogCholesky,
     Spherical,
@@ -31,7 +31,7 @@ from .sigma_transformations import (
     eigen2d,
 )
 from .methods.rms_integration import RMSIntegration
-from .supergaussian_c_drivers import supergaussian, supergaussian_grad
+from .methods.supergaussian.c_drivers import supergaussian, supergaussian_grad
 from .methods.debug import AnalysisMethodDebugger
 
 # Register all analysis methods to the factory

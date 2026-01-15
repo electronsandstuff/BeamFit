@@ -2,24 +2,10 @@ import numpy as np
 import scipy.optimize as opt
 from typing import Union, Any
 
-from .. import factory
-from ..base import AnalysisMethod, Setting
-from ..utils import SuperGaussianResult
-from ..supergaussian_c_drivers import supergaussian, supergaussian_grad
-
-
-class SigmaTrans:
-    def __init__(self):
-        pass
-
-    def forward(self, h):
-        raise NotImplementedError
-
-    def reverse(self, h):
-        raise NotImplementedError
-
-    def forward_grad(self, h, grad):
-        raise NotImplementedError
+from ... import factory
+from ...base import AnalysisMethod, Setting
+from ...utils import SuperGaussianResult
+from .c_drivers import supergaussian, supergaussian_grad
 
 
 class SuperGaussian(AnalysisMethod):
