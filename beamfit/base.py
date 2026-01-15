@@ -8,6 +8,10 @@ from abc import ABC
 
 @dataclass
 class Setting:
+    """
+    Used to programatically pass information about what settings are available for user facing code to modify.
+    """
+
     name: str
     default: str
     stype: str = "str"  # can be 'str', 'list', 'settings_list'
