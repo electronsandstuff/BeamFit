@@ -6,6 +6,12 @@ from ..utils import SuperGaussianResult
 
 
 class RMSIntegration(AnalysisMethod):
+    """
+    Estimate beam centroids and beam moments by numerically integrating the distribution. Ie
+    $\sigma_{x,y} = \sqrt{E[{x,y}^2] - E[{x,y}]^2}$. Where the expectation value is calculated as
+    $E[g(x,y)] = \int\int f(x,y)*g(x,y)*dx*dy$ for the normalized distribution $f(x,y)$.
+    """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
