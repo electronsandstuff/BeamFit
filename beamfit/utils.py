@@ -6,7 +6,27 @@ from . import factory
 from .base import AnalysisMethod, AnalysisResult
 
 
-def get_image_and_weight(raw_images, dark_fields, mask):
+def get_image_and_weight(
+    raw_images: list[np.ndarray], dark_fields: list[np.ndarray], mask: np.ndarray
+):
+    """
+    Convenience function to get an averaged and background subtracked image combined with a weighting value for each pixel
+    based on the amount of noise in it.
+
+    Parameters
+    ----------
+    raw_images : list[np.ndarray]
+        The images of the beam to process
+    dark_fields : list[np.ndarray]
+        Images without the beam for background subtraction
+    mask : np.ndarray
+        A boolean image where a true pixel excludes it from fitting
+
+    Returns
+    -------
+    np.ndarray, np.ndarray
+        The processed image and its weights
+    """
     image = np.ma.masked_array(
         data=np.mean(raw_images, axis=0) - np.mean(dark_fields, axis=0), mask=mask
     )
@@ -28,11 +48,38 @@ def create_analysis_method_from_dict(d):
     return factory.create("analysis", d["type"], **d["config"])
 
 
-def super_gaussian_scaling_factor(n):
+def super_gaussian_scaling_factor(n: float) -> float:
+    """
+    Factor applied to the internal covariance-matrix-like parameters of the supergaussian function to convert it
+    to the actual covariance matrix (ie Sigma = f(n) * Sigma_{sg}).
+
+    Parameters
+    ----------
+    n : float
+        Supergaussian parameter n
+
+    Returns
+    -------
+    float
+        The conversion factor
+    """
     return special.gamma((2 + n) / n) / 2 / special.gamma(1 + 1 / n)
 
 
 def super_gaussian_scaling_factor_grad(n):
+    """
+    The derivative of `super_gaussian_scaling_factor` for uncertainty propogation.
+
+    Parameters
+    ----------
+    n : float
+        Supergaussian parameter n
+
+    Returns
+    -------
+    float
+        Derivative of the conversion factor
+    """
     n = n
     scaling_factor_deriv = (
         special.gamma((2 + n) / n) / 2 / n**2 * special.polygamma(0, 1 + 1 / n)
@@ -48,6 +95,11 @@ def super_gaussian_scaling_factor_grad(n):
 
 
 class SuperGaussianResult(AnalysisResult):
+    """
+    Represents the results of a fitting process where the model takes the form of a supergaussian (or gaussian where
+    `n` is set to 1)
+    """
+
     def __init__(
         self, mu=np.zeros(2), sigma=np.identity(2), a=1.0, o=0.0, n=1.0, c=None, h=None
     ):
