@@ -7,6 +7,10 @@ from ..utils import SuperGaussianResult
 
 
 class GaussianProfile1D(AnalysisMethod):
+    """
+    Calculate the centroid and beam moments from the marginal distributions on the X and Y axis which are fit to Gaussians.
+    """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
