@@ -1,8 +1,8 @@
 import numpy as np
 from typing import Union, Any
 
-from .base import AnalysisMethod, Setting
-from .utils import SuperGaussianResult
+from ..base import AnalysisMethod, Setting
+from ..utils import SuperGaussianResult
 
 
 class RMSIntegration(AnalysisMethod):

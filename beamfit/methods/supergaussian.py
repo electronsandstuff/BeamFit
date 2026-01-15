@@ -2,10 +2,10 @@ import numpy as np
 import scipy.optimize as opt
 from typing import Union, Any
 
-from . import factory
-from .base import AnalysisMethod, Setting
-from .utils import SuperGaussianResult
-from .supergaussian_c_drivers import supergaussian, supergaussian_grad
+from .. import factory
+from ..base import AnalysisMethod, Setting
+from ..utils import SuperGaussianResult
+from ..supergaussian_c_drivers import supergaussian, supergaussian_grad
 
 
 class SigmaTrans:

@@ -2,8 +2,8 @@ import numpy as np
 from scipy import special, optimize as opt
 from typing import Union, Any
 
-from .base import AnalysisMethod, Setting
-from .utils import SuperGaussianResult
+from ..base import AnalysisMethod, Setting
+from ..utils import SuperGaussianResult
 
 
 class GaussianProfile1D(AnalysisMethod):
