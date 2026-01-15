@@ -5,7 +5,6 @@ from typing import Union, Any
 from ... import factory
 from ...base import AnalysisMethod, Setting
 from ...utils import SuperGaussianResult
-from .c_drivers import supergaussian, supergaussian_grad
 
 
 def supergaussian_python(x, y, mu_x, mu_y, sigma_xx, sigma_xy, sigma_yy, n, a, o):
@@ -268,11 +267,11 @@ class SuperGaussian(AnalysisMethod):
             return j
 
         def fitfun(xdata, *theta):
-            return supergaussian(xdata[0], xdata[1], *theta_to_h(theta))
+            return supergaussian_python(xdata[0], xdata[1], *theta_to_h(theta))
 
         def fitfun_grad(xdata, *theta):
             jacf = theta_to_h_grad(theta)
-            jacg = supergaussian_grad(xdata[0], xdata[1], *theta_to_h(theta))
+            jacg = supergaussian_grad_python(xdata[0], xdata[1], *theta_to_h(theta))
             return jacg @ jacf  # Chain rule
 
         if image_sigmas is None:
