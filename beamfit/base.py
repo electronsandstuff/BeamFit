@@ -22,19 +22,33 @@ class Setting:
 
 
 class AnalysisMethod(ABC):
+    """
+    Parent class for all methods of getting first and second moments from a beam image.
+    """
+
     def __init__(self, sigma_threshold=None, median_filter_size=None):
         self.sigma_threshold = sigma_threshold
         self.median_filter_size = median_filter_size
 
     def fit(self, image, image_sigmas=None):
         """
-        Measure the RMS size and centroid of the supplied image. If the image is passed as a masked array then
-        (depending on support by the fitting method) only unmasked pixels are considered. This can be useful for
+        Measure the RMS size and centroid of the supplied image.
+
+        If the image is passed as a masked array then (depending on support by the
+        fitting method) only unmasked pixels are considered. This can be useful for
         selecting oddly shaped regions of interest.
 
-        :param image: 2D np.ndarray or np.ma.array, the image as a grayscale array or masked array of pixels
-        :param image_sigmas: (optional) the uncertainty in each pixel intensity
-        :return: AnalysisResult object (depends on analysis method)
+        Parameters
+        ----------
+        image : np.ndarray or np.ma.array, 2D
+            The image as a grayscale array or masked array of pixels.
+        image_sigmas : array-like, optional
+            The uncertainty in each pixel intensity.
+
+        Returns
+        -------
+        AnalysisResult
+            Analysis result object (depends on analysis method).
         """
         if not np.ma.isMaskedArray(image):  # Make a mask if there isn't one
             image = np.ma.array(image)
@@ -50,9 +64,20 @@ class AnalysisMethod(ABC):
         return self.__fit__(image, image_sigmas)
 
     def __fit__(self, image, image_sigmas=None):
+        """
+        Implement the actual fitting method in child classes using this method.
+        """
         raise NotImplementedError
 
     def get_config_dict(self):
+        """
+        Returns all information to configure the class as a dict.
+
+        Returns
+        -------
+        dict
+            Class config information
+        """
         ret = {
             "sigma_threshold": self.sigma_threshold,
             "median_filter_size": self.median_filter_size,
@@ -61,9 +86,25 @@ class AnalysisMethod(ABC):
         return ret
 
     def __get_config_dict__(self):
+        """
+        Internal method implemented by children to add their own configuration.
+
+        Returns
+        -------
+        dict
+            Class config information
+        """
         return {}
 
     def get_settings(self) -> list[Setting]:
+        """
+        Returns a list of settings for user code to programatically modify the method.
+
+        Returns
+        -------
+        list[Setting]
+            List of the user changeable settings
+        """
         arr = [
             Setting("Sigma Threshold", "Off", stype="list", list_values=["Off", "On"]),
             Setting("Sigma Threshold Size", "3.0"),
@@ -73,9 +114,25 @@ class AnalysisMethod(ABC):
         return arr + self.__get_settings__()
 
     def __get_settings__(self) -> list[Setting]:
+        """
+        Internal method used by children to return their additional settings.
+
+        Returns
+        -------
+        list[Setting]
+            The settings usable by children
+        """
         raise NotImplementedError()
 
-    def set_from_settings(self, settings: list[str, str]):
+    def set_from_settings(self, settings: dict[str, str]):
+        """
+        Update the class based on settings returned from user code.
+
+        Parameters
+        ----------
+        settings : dict[str, str]
+            Mapping from setting name to setting value
+        """
         if settings["Sigma Threshold"] == "On":
             sigma_threshold = float(settings["Sigma Threshold Size"])
             if sigma_threshold <= 0.0:
@@ -109,18 +166,57 @@ class AnalysisMethod(ABC):
         self.__set_from_settings__(settings)
 
     def __set_from_settings__(self, settings: dict[str, Union[str, dict[str, Any]]]):
+        """
+        Implemented by children to apply settings to their internal parameters.
+        """
         raise NotImplementedError()
 
 
 class AnalysisResult(ABC):
-    def get_mean(self):
+    """
+    Parent class for the output of one of the analysis methods.
+    """
+
+    def get_mean(self) -> np.ndarray:
+        """
+        Return the centroid vector in pixel coordinates.
+
+        Returns
+        -------
+        np.ndarray
+            The centroid vector [mu_x, mu_y]
+        """
         raise NotImplementedError
 
-    def get_covariance_matrix(self):
+    def get_covariance_matrix(self) -> np.ndarray:
+        """
+        Return the covariance matrix in pixel coordinates.
+
+        Returns
+        -------
+        np.ndarray
+            The covariance matrix [[sigma_xx, sigma_xy], [sigma_yx, sigma_yy]] in units of pixels
+        """
         raise NotImplementedError
 
-    def get_mean_std(self):
+    def get_mean_std(self) -> np.ndarray:
+        """
+        Get an estimate of uncertainty for each component of the centroid vector.
+
+        Returns
+        -------
+        np.ndarray
+            The vector [std(mu_x), std(mu_y)]
+        """
         return None
 
-    def get_covariance_matrix_std(self):
+    def get_covariance_matrix_std(self) -> np.ndarray:
+        """
+        Return an estimate of uncertainty in the covariance matrix.
+
+        Returns
+        -------
+        np.ndarray
+            The matrix [[std(sigma_xx), std(sigma_xy)], [std(sigma_yx), std(sigma_yy)]]
+        """
         return None

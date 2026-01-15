@@ -57,7 +57,6 @@ def create_analysis(name, **kwargs):
 
 
 __all__ = [
-    # Factory functions
     "register",
     "create",
     "unregister",
