@@ -36,7 +36,8 @@ jobs:
       shell: powershell
       run: |
         "## Pytest Results`n`n" | Add-Content -Path $env:GITHUB_STEP_SUMMARY
-        "``````" | Add-Content -Path $env:GITHUB_STEP_SUMMARY
-        $output = pytest -v tests 2>&1
-        $output | Add-Content -Path $env:GITHUB_STEP_SUMMARY
-        "``````" | Add-Content -Path $env:GITHUB_STEP_SUMMARY
+        "```" | Add-Content -Path $env:GITHUB_STEP_SUMMARY
+        pytest -v tests 2>&1 | Tee-Object -FilePath temp_output.txt
+        Get-Content temp_output.txt | Add-Content -Path $env:GITHUB_STEP_SUMMARY
+        "```" | Add-Content -Path $env:GITHUB_STEP_SUMMARY
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
