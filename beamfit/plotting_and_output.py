@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from .methods.supergaussian.c_drivers import supergaussian
+from .methods.supergaussian.supergaussian import supergaussian
 
 from .fit_param_conversion import get_mu_sigma_std, get_mu_sigma
 

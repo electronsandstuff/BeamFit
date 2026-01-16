@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 from beamfit.methods.supergaussian.supergaussian import (
-    supergaussian_python as supergaussian,
-    supergaussian_grad_python as supergaussian_grad,
+    supergaussian,
+    supergaussian_grad,
 )
 from beamfit import factory
 

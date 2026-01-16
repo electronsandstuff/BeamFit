@@ -98,17 +98,6 @@ beamfit.pretty_print_loc_and_size(h, C, 50e-6, 1e-9)
 
 We also print the location for the user using the built in beamfit routine.
 
-## Compiled Supergaussian ufuncs
-
-For performance reasons, the supergaussian and supergaussian derivative functions are implemented as numpy ufuncs in a compiled c extension.  These ufuncs are exported in the extension `beamfit.gaussufunc` and compute the value and gradient of the function `sgauss(r) = A*exp( ((r-mu)*C*(r-mu)^T)^n ) + O`. The vector `r` is a 2D position `r = [X, Y]`, A and O are the amplitude and offset of the distribution.  The vector `mu` is the mean `mu = [mux, muy]` and `CV` is the variance-covariance matrix `C = [[Vxx, Vxy], [Vxy, Vxx]]`.  The supergaussian parameter is `n`.  The signature of the ufuncs are
-```python
-# Supergaussian ufunc
-beamfit.gaussufunc.supergaussian(X, Y, mux, muy, Vxx, Vxy, Vyy, n, A, O)
-
-# Supergaussian gradient ufunc
-beamfit.gaussufunc.supergaussian_grad(X, Y, mux, muy, Vxx, Vxy, Vyy, n, A, O)
-```
-
 ## Reference
 
 ##### fit_supergaussian(image, image_weights=None, prediction_func=None, sigma_threshold=3, sigma_threshold_guess=1)
@@ -165,71 +154,6 @@ Computes the mean background subtracted image and weights for use with beamfit.
       The averaged and background subtracted beam image.
 * weights: array_like
       Weights compatible with beamfit computed from the variance of the images and backgrounds.
-
-##### beamfit.gaussufunc.supergaussian(X, Y, mux, muy, Vxx, Vxy, Vyy, n, A, O)
-
-Compiled version of the supergaussian function `sgauss(r) = A*exp( ((r-mu)*C*(r-mu)^T)^n ) + O`.
-
-###### Parameters
-
-* X: array_like
-      x coordinate of the position vector 
-* Y: array_like
-      y coordinate of the position vector  Must have same dimension as X.
-* mux: float
-      x coordinate of the mean of the gaussian
-* muy: float
-      y coordinate of the mean of the supergaussian
-* Vxx: float
-      Upper left element of variance-covariance matrix
-* Vxy: float
-      Off diagonal elements of the variance-covariance matrix
-* Vyy: float
-      Bottom right element of the variance-covariance matrix
-* n: float
-     The supergaussian parameter
-* A: float
-      Amplitude of the distribution
-* O: float
-      Offset of the distribution
-
-###### Returns
-
-* supergaussian: array_like
-      The evaluated supergaussian.
-
-##### beamfit.gaussufunc.supergaussian_grad(X, Y, mux, muy, Vxx, Vxy, Vyy, n, A, O)
-
-Compiled version of the gradient of the supergaussian function `sgauss(r) = A*exp( ((r-mu)*C*(r-mu)^T)^n ) + O`.
-
-###### Parameters
-
-* X: array_like
-      x coordinate of the position vector 
-* Y: array_like
-      y coordinate of the position vector  Must have same dimension as X.
-* mux: float
-      x coordinate of the mean of the gaussian
-* muy: float
-      y coordinate of the mean of the supergaussian
-* Vxx: float
-      Upper left element of variance-covariance matrix
-* Vxy: float
-      Off diagonal elements of the variance-covariance matrix
-* Vyy: float
-      Bottom right element of the variance-covariance matrix
-* n: float
-     The supergaussian parameter
-* A: float
-      Amplitude of the distribution
-* O: float
-      Offset of the distribution
-
-###### Returns
-
-* supergaussian_grad: tuple of array_like
-     The gradient of the supergaussian.  Each element of the tuple is one element of the gradient where
-      they are in the same order as the parameters to this function.
 
 ##### beamfit.get_mu_sigma(h, pixel_size)
 
