@@ -22,8 +22,7 @@ jobs:
     - name: Install package and dependencies
       run: |
         pip install --upgrade pip
-        pip install pytest pytest-cov
-        pip install .
+        pip install ".[dev]"
     - name: Run the tests (Linux/macOS)
       if: runner.os != 'Windows'
       run: |

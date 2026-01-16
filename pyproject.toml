@@ -16,8 +16,15 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "matplotlib", 
+    "matplotlib",
     "scipy"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "pytest-benchmark"
 ]
 
 [project.urls]
