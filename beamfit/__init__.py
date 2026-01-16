@@ -31,7 +31,7 @@ from .methods.supergaussian.sigma_transformations import (
     eigen2d,
 )
 from .methods.rms_integration import RMSIntegration
-from .methods.supergaussian.c_drivers import supergaussian, supergaussian_grad
+from .methods.supergaussian import supergaussian, supergaussian_grad
 from .methods.debug import AnalysisMethodDebugger
 
 # Register all analysis methods to the factory

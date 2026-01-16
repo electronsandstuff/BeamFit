@@ -5,7 +5,188 @@ from typing import Union, Any
 from ... import factory
 from ...base import AnalysisMethod, Setting
 from ...utils import SuperGaussianResult
-from .c_drivers import supergaussian, supergaussian_grad
+
+
+def supergaussian(x, y, mu_x, mu_y, sigma_xx, sigma_xy, sigma_yy, n, a, o):
+    """
+    Pure Python implementation of the bivariate super-Gaussian function.
+
+    Computes the function:
+        f(r) = a*exp(-(1/2(r - mu)^T Sigma^{-1} (r - mu))^n) + o
+
+    where r is the vector {x, y}, mu is the centroid vector {mu_x, mu_y}, and
+    Sigma is the covariance matrix {{sigma_xx, sigma_xy}, {sigma_xy, sigma_yy}}.
+
+    This is a direct translation of the C implementation in src/gaussian.c.
+
+    Parameters
+    ----------
+    x : float or np.ndarray
+        x value(s) at which the super-Gaussian is evaluated.
+    y : float or np.ndarray
+        y value(s) at which the super-Gaussian is evaluated.
+    mu_x : float
+        x component of centroid.
+    mu_y : float
+        y component of centroid.
+    sigma_xx : float
+        x variance.
+    sigma_xy : float
+        xy correlation.
+    sigma_yy : float
+        y variance.
+    n : float
+        Super-Gaussian parameter.
+    a : float
+        Amplitude.
+    o : float
+        Offset.
+
+    Returns
+    -------
+    float or np.ndarray
+        The values of the super-Gaussian.
+    """
+    # Compute inverse of determinant: 1 / (sigma_xx * sigma_yy - sigma_xy^2)
+    inv_det = 1.0 / (sigma_xx * sigma_yy - sigma_xy * sigma_xy)
+
+    # Compute displacements from centroid
+    dx = x - mu_x
+    dy = y - mu_y
+
+    # Compute the quadratic form: (r - mu)^T Sigma^{-1} (r - mu)
+    # Using matrix inverse formula for 2x2 matrix:
+    # Sigma^{-1} = (1/det) * [[sigma_yy, -sigma_xy], [-sigma_xy, sigma_xx]]
+    quad_x = sigma_yy * inv_det * dx - sigma_xy * inv_det * dy
+    quad_y = -sigma_xy * inv_det * dx + sigma_xx * inv_det * dy
+
+    # Complete the quadratic form
+    quad_form = dx * quad_x + dy * quad_y
+
+    # Compute the super-Gaussian: a * exp(-(quad_form^n) / 2^n) + o
+    # Equivalent to: a / exp((quad_form^n) / 2^n) + o
+    result = a / np.exp(np.abs(quad_form) ** n / (2.0**n)) + o
+
+    return result
+
+
+def supergaussian_grad(x, y, mu_x, mu_y, sigma_xx, sigma_xy, sigma_yy, n, a, o):
+    """
+    Pure Python implementation of the super-Gaussian gradient (Jacobian).
+
+    Calculate the Jacobian of the super-Gaussian with respect to the parameters.
+
+    Computes the Jacobian matrix of the super-Gaussian function with respect to
+    the parameters (mu_x, mu_y, sigma_xx, sigma_xy, sigma_yy, n, a, o).
+
+    This is a direct translation of the C implementation in src/gaussian.c.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Array of x values to evaluate at.
+    y : np.ndarray
+        Array of y values to evaluate at.
+    mu_x : float
+        x component of centroid.
+    mu_y : float
+        y component of centroid.
+    sigma_xx : float
+        x variance.
+    sigma_xy : float
+        xy correlation.
+    sigma_yy : float
+        y variance.
+    n : float
+        Super-Gaussian parameter.
+    a : float
+        Amplitude.
+    o : float
+        Offset.
+
+    Returns
+    -------
+    np.ndarray, shape (m, 8)
+        The Jacobian of the super-Gaussian with respect to all parameters.
+        Columns are: [d/dmu_x, d/dmu_y, d/dsigma_xx, d/dsigma_xy, d/dsigma_yy, d/dn, d/da, d/do]
+    """
+    # Pre-compute common terms
+    TMP_180 = mu_x - x  # Note: reversed from C code (args[2] - args[0])
+    TMP_172 = sigma_xy * sigma_xy
+    TMP_178 = sigma_xx * mu_y * mu_y
+    TMP_185 = sigma_xx * y * y
+    TMP_189 = mu_x * sigma_xy - sigma_xy * x + sigma_xx * y
+    TMP_191 = (
+        TMP_178
+        + sigma_yy * TMP_180 * TMP_180
+        + 2.0 * sigma_xy * y * TMP_180
+        + TMP_185
+        - 2.0 * mu_y * TMP_189
+    )
+    TMP_170 = np.power(2.0, 1.0 - n)
+    TMP_171 = np.power(2.0, -n)
+    TMP_175 = sigma_xx * sigma_yy - TMP_172
+    TMP_192 = TMP_191 / TMP_175
+    TMP_193 = np.power(np.abs(TMP_192), n)
+    TMP_195 = np.exp(-TMP_171 * TMP_193)
+    TMP_199 = np.power(np.abs(sigma_xx * sigma_yy - TMP_172), -n)
+    TMP_205 = -1.0 + n
+    TMP_206 = np.power(np.abs(TMP_191) + 1.0e-100, TMP_205)
+    TMP_200 = mu_y * sigma_xy
+    TMP_202 = sigma_yy * x
+    TMP_204 = TMP_200 - mu_x * sigma_yy + TMP_202 - sigma_xy * y
+    TMP_214 = 1.0 / TMP_175 / TMP_175
+    TMP_216 = np.power(np.abs(TMP_192) + 1.0e-100, TMP_205)
+    TMP_212 = mu_y * sigma_xx - mu_x * sigma_xy + sigma_xy * x - sigma_xx * y
+
+    # Compute gradients (matching C code lines 97-109)
+    grad_mu_x = a * n * TMP_170 * TMP_195 * TMP_199 * TMP_204 * TMP_206
+    grad_mu_y = -(a * n * TMP_170 * TMP_195 * TMP_199 * TMP_206 * TMP_212)
+    grad_sigma_xx = a * n * TMP_171 * TMP_195 * TMP_204 * TMP_204 * TMP_214 * TMP_216
+    grad_sigma_xy = (
+        a
+        * n
+        * TMP_170
+        * (-(mu_y * sigma_xx) + TMP_189)
+        * TMP_195
+        * TMP_204
+        * TMP_214
+        * TMP_216
+    )
+    grad_sigma_yy = a * n * TMP_171 * TMP_195 * TMP_212 * TMP_212 * TMP_214 * TMP_216
+
+    # Gradient w.r.t. n - handle small values to avoid log(0)
+    grad_n = np.where(
+        TMP_191 < 1e-50,
+        0.0,
+        a
+        * TMP_171
+        * TMP_193
+        * TMP_195
+        * (
+            np.log(np.abs(2.0 * sigma_xx * sigma_yy - 2.0 * TMP_172))
+            - np.log(np.abs(TMP_191))
+        ),
+    )
+
+    grad_a = TMP_195
+    grad_o = np.ones_like(x)
+
+    # Stack into matrix form (m, 8) - transposed from C implementation
+    result = np.array(
+        [
+            grad_mu_x,
+            grad_mu_y,
+            grad_sigma_xx,
+            grad_sigma_xy,
+            grad_sigma_yy,
+            grad_n,
+            grad_a,
+            grad_o,
+        ]
+    ).T
+
+    return result
 
 
 class SuperGaussian(AnalysisMethod):

@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "macos-latest"]
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
         python-version: ["3.9", "3.10", "3.11", "3.12"]
     steps:
     - uses: actions/checkout@v3
@@ -22,8 +22,7 @@ jobs:
     - name: Install package and dependencies
       run: |
         pip install --upgrade pip
-        pip install pytest pytest-cov
-        pip install .
+        pip install ".[dev]"
     - name: Run the tests (Linux/macOS)
       if: runner.os != 'Windows'
       run: |
@@ -36,7 +35,8 @@ jobs:
       shell: powershell
       run: |
         "## Pytest Results`n`n" | Add-Content -Path $env:GITHUB_STEP_SUMMARY
-        "``````" | Add-Content -Path $env:GITHUB_STEP_SUMMARY
-        $output = pytest -v tests 2>&1
-        $output | Add-Content -Path $env:GITHUB_STEP_SUMMARY
-        "``````" | Add-Content -Path $env:GITHUB_STEP_SUMMARY
+        '```' | Add-Content -Path $env:GITHUB_STEP_SUMMARY
+        pytest -v tests 2>&1 | Tee-Object -FilePath temp_output.txt
+        Get-Content temp_output.txt | Add-Content -Path $env:GITHUB_STEP_SUMMARY
+        '```' | Add-Content -Path $env:GITHUB_STEP_SUMMARY
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
