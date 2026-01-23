@@ -1,5 +1,5 @@
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, PrivateAttr
 from typing import Literal
 
 
@@ -117,28 +117,28 @@ class Cholesky(SigmaParameterization):
 
 class LogCholesky(SigmaParameterization):
     type: Literal["LogCholesky"] = "LogCholesky"
-    ch: Cholesky = Field(default_factory=Cholesky)
+    _ch: Cholesky = PrivateAttr(default_factory=Cholesky)
 
     def forward(self, s):
-        st = self.ch.forward(s)
+        st = self._ch.forward(s)
         return np.array([np.log(st[0]), st[1], np.log(st[2])])
 
     def reverse(self, st):
-        return self.ch.reverse(np.array([np.exp(st[0]), st[1], np.exp(st[2])]))
+        return self._ch.reverse(np.array([np.exp(st[0]), st[1], np.exp(st[2])]))
 
     def reverse_grad(self, st):
         jf = np.array([[np.exp(st[0]), 0, 0], [0, 1, 0], [0, 0, np.exp(st[2])]])
         return (
-            self.ch.reverse_grad(np.array([np.exp(st[0]), st[1], np.exp(st[2])])) @ jf
+            self._ch.reverse_grad(np.array([np.exp(st[0]), st[1], np.exp(st[2])])) @ jf
         )
 
 
 class Spherical(SigmaParameterization):
     type: Literal["Spherical"] = "Spherical"
-    ch: Cholesky = Field(default_factory=Cholesky)
+    _ch: Cholesky = PrivateAttr(default_factory=Cholesky)
 
     def forward(self, s):
-        st = self.ch.forward(s)
+        st = self._ch.forward(s)
         theta = np.arccos(st[1] / np.sqrt(st[1] ** 2 + st[2] ** 2))
         return np.array(
             [
@@ -150,7 +150,7 @@ class Spherical(SigmaParameterization):
 
     def reverse(self, st):
         theta = a_to_theta(st[2])
-        return self.ch.reverse(
+        return self._ch.reverse(
             np.array(
                 [
                     np.exp(st[0]),
@@ -179,7 +179,7 @@ class Spherical(SigmaParameterization):
             ]
         )
         return (
-            self.ch.reverse_grad(
+            self._ch.reverse_grad(
                 np.array(
                     [
                         np.exp(st[0]),
