@@ -172,7 +172,7 @@ class AnalysisMethod(BaseModel, ABC):
         raise NotImplementedError()
 
 
-class AnalysisResult(ABC):
+class AnalysisResult(BaseModel, ABC):
     """
     Parent class for the output of one of the analysis methods.
     """
