@@ -1,9 +1,12 @@
 from __future__ import annotations
 import numpy as np
 import scipy.special as special
+from typing import Any
+from pydantic import field_validator, model_validator, Field
 
 from . import factory
 from .base import AnalysisMethod, AnalysisResult
+from .pydantic import NumpyArray
 
 
 def get_image_and_weight(
@@ -100,18 +103,67 @@ class SuperGaussianResult(AnalysisResult):
     `n` is set to 1)
     """
 
-    def __init__(
-        self, mu=np.zeros(2), sigma=np.identity(2), a=1.0, o=0.0, n=1.0, c=None, h=None
-    ):
-        if h is None:
-            self.mu = mu  # Centroid
-            self.sigma = sigma  # Variance-covariance matrix
-            self.a = a  # Amplitude
-            self.o = o  # Background offset
-            self.n = n  # Supergaussian parameter
-        else:
-            self.h = h
-        self.c = c  # covariance matrix of h
+    # Parameters of best fit
+    mu: NumpyArray = Field(description="Centroid of distribution (x, y)")
+    sigma: NumpyArray = Field(
+        description="Covariance matrix of underlying Gaussian ((xx, xy), (yx, yy))"
+    )
+    a: float = Field(1.0, description="Amplitude")
+    o: float = Field(0.0, description="Offset")
+    n: float = Field(1.0, description="Supergaussian parameter")
+
+    # Parameter covariances
+    c: NumpyArray | None = Field(
+        None, description="Covariance between all parameters of best fit `h`"
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_h_init(cls, data: Any) -> Any:
+        """Handle legacy initialization with h parameter"""
+        if not isinstance(data, dict):
+            return data
+
+        if "h" in data:
+            h = np.asarray(data.pop("h"))
+            # h format: [mu_x, mu_y, sigma_xx, sigma_xy, sigma_yy, n, a, o]
+            data["mu"] = np.array([h[0], h[1]])
+            data["sigma"] = np.array([[h[2], h[3]], [h[3], h[4]]])
+            data["n"] = h[5]
+            data["a"] = h[6]
+            data["o"] = h[7]
+
+        return data
+
+    @field_validator("mu")
+    @classmethod
+    def validate_mu_shape(cls, v):
+        """Validate that mu is a 2D vector"""
+        if v.shape != (2,):
+            raise ValueError(
+                f"mu must be a 2D vector with shape (2,), got shape {v.shape}"
+            )
+        return v
+
+    @field_validator("sigma")
+    @classmethod
+    def validate_sigma_shape(cls, v):
+        """Validate that sigma is a 2x2 matrix"""
+        if v.shape != (2, 2):
+            raise ValueError(
+                f"sigma must be a 2x2 matrix with shape (2, 2), got shape {v.shape}"
+            )
+        return v
+
+    @field_validator("c")
+    @classmethod
+    def validate_c_shape(cls, v):
+        """Validate that c is an 8x8 covariance matrix"""
+        if v.shape != (8, 8):
+            raise ValueError(
+                f"c must be an 8x8 matrix with shape (8, 8), got shape {v.shape}"
+            )
+        return v
 
     @property
     def h(self):

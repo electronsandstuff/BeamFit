@@ -1,10 +1,22 @@
 import numpy as np
 import scipy.optimize as opt
-from typing import Union, Any
+import warnings
+from typing import Union, Any, Annotated, Literal
+from pydantic import Field, Discriminator, model_validator
 
 from ... import factory
 from ...base import AnalysisMethod, Setting
 from ...utils import SuperGaussianResult
+from .sigma_transformations import (
+    Cholesky,
+    LogCholesky,
+    Spherical,
+    MatrixLogarithm,
+    Givens,
+)
+from ..gaussian_fit_1d import GaussianProfile1D
+from ..gaussian_linear_least_squares import GaussianLinearLeastSquares
+from ..rms_integration import RMSIntegration
 
 
 def supergaussian(x, y, mu_x, mu_y, sigma_xx, sigma_xy, sigma_yy, n, a, o):
@@ -195,25 +207,57 @@ class SuperGaussian(AnalysisMethod):
       f(r) = a*exp(-(1/2(r - mu)^T Sigma^{-1} (r - mu))^n) + o
     """
 
-    def __init__(
-        self,
-        predfun="GaussianProfile1D",
-        predfun_args=None,
-        sig_param="LogCholesky",
-        sig_param_args=None,
-        maxfev=100,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        if sig_param_args is None:
-            sig_param_args = {}
-        if predfun_args is None:
-            predfun_args = {}
-        self.predfun = factory.create("analysis", predfun, **predfun_args)
-        self.predfun_args = predfun_args
-        self.maxfev = maxfev
-        self.sig_param = factory.create("sig_param", sig_param, **sig_param_args)
-        self.sig_param_args = sig_param_args
+    type: Literal["SuperGaussian"] = "SuperGaussian"
+    predfun: Annotated[
+        Union[GaussianProfile1D, GaussianLinearLeastSquares, RMSIntegration],
+        Discriminator("type"),
+    ] = Field(
+        default_factory=GaussianProfile1D,
+        description="Which fit method is used for initial guess of fit parameters.",
+    )
+    sig_param: Annotated[
+        Union[Cholesky, LogCholesky, Spherical, MatrixLogarithm, Givens],
+        Discriminator("type"),
+    ] = Field(
+        default_factory=LogCholesky,
+        description="Which unbounded parameterization of the covariance matrix to use during the fitting",
+    )
+    maxfev: int = 100
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_legacy_init(cls, data: Any) -> Any:
+        """Handle legacy __init__ interface with string names and kwarg dicts"""
+        if not isinstance(data, dict):
+            return data
+
+        # Handle legacy predfun string interface
+        if "predfun" in data and isinstance(data["predfun"], str):
+            warnings.warn(
+                "Passing 'predfun' as string and kwargs is deprecated. "
+                "Pass an instance of the analysis method directly instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            predfun_name = data["predfun"]
+            predfun_args = data.pop("predfun_args", {})
+            data["predfun"] = factory.create("analysis", predfun_name, **predfun_args)
+
+        # Handle legacy sig_param string interface
+        if "sig_param" in data and isinstance(data["sig_param"], str):
+            warnings.warn(
+                "Passing 'sig_param' as string and kwargs is deprecated. "
+                "Pass an instance of the sigma parameterization directly instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            sig_param_name = data["sig_param"]
+            sig_param_args = data.pop("sig_param_args", {})
+            data["sig_param"] = factory.create(
+                "sig_param", sig_param_name, **sig_param_args
+            )
+
+        return data
 
     def __fit__(self, image, image_sigmas=None):
         lo, hi = image.min(), image.max()  # Normalize image

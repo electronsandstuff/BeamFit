@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Union, Any
+from typing import Union, Any, Literal
 
 from ..base import AnalysisMethod, Setting
 from ..utils import SuperGaussianResult
@@ -109,8 +109,7 @@ class GaussianLinearLeastSquares(AnalysisMethod):
     sigma_y = exp(x)*sigma_x) so that the fit minimizes least squared errors of the pre-transformed image.
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    type: Literal["GaussianLinearLeastSquares"] = "GaussianLinearLeastSquares"
 
     def __fit__(self, image, image_sigmas=None):
         if image_sigmas is None:

@@ -4,6 +4,7 @@ import scipy.signal as signal
 from dataclasses import dataclass
 from typing import Union, Any
 from abc import ABC
+from pydantic import BaseModel
 
 
 @dataclass
@@ -21,14 +22,13 @@ class Setting:
     )
 
 
-class AnalysisMethod(ABC):
+class AnalysisMethod(BaseModel, ABC):
     """
     Parent class for all methods of getting first and second moments from a beam image.
     """
 
-    def __init__(self, sigma_threshold=None, median_filter_size=None):
-        self.sigma_threshold = sigma_threshold
-        self.median_filter_size = median_filter_size
+    sigma_threshold: float | None = None
+    median_filter_size: int | None = None
 
     def fit(self, image, image_sigmas=None):
         """
@@ -172,7 +172,7 @@ class AnalysisMethod(ABC):
         raise NotImplementedError()
 
 
-class AnalysisResult(ABC):
+class AnalysisResult(BaseModel, ABC):
     """
     Parent class for the output of one of the analysis methods.
     """

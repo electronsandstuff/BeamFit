@@ -204,3 +204,129 @@ def test_gaussian_linear_least_squares_trans_grad(x0):
         beamfit.gaussian_lls_trans, x0=x0, fn_type="vector"
     )
     np.testing.assert_allclose(beamfit.gaussian_lls_trans_grad(x0), j, atol=1e-10)
+
+
+@pytest.mark.parametrize(
+    "predfun,expected_class",
+    [
+        ("GaussianProfile1D", beamfit.GaussianProfile1D),
+        ("GaussianLinearLeastSquares", beamfit.GaussianLinearLeastSquares),
+        ("RMSIntegration", beamfit.RMSIntegration),
+    ],
+)
+def test_supergaussian_init_predfun_string(predfun, expected_class):
+    """Test SuperGaussian initialization with string predfun names"""
+    sg = beamfit.SuperGaussian(predfun=predfun)
+    assert isinstance(sg.predfun, expected_class)
+    assert sg.predfun.type == predfun
+
+
+@pytest.mark.parametrize(
+    "sig_param,expected_class",
+    [
+        ("Cholesky", beamfit.Cholesky),
+        ("LogCholesky", beamfit.LogCholesky),
+        ("Spherical", beamfit.Spherical),
+        ("MatrixLogarithm", beamfit.MatrixLogarithm),
+        ("Givens", beamfit.Givens),
+    ],
+)
+def test_supergaussian_init_sig_param_string(sig_param, expected_class):
+    """Test SuperGaussian initialization with string sig_param names"""
+    sg = beamfit.SuperGaussian(sig_param=sig_param)
+    assert isinstance(sg.sig_param, expected_class)
+    assert sg.sig_param.type == sig_param
+
+
+def test_supergaussian_init_with_predfun_args():
+    """Test SuperGaussian initialization with predfun_args"""
+    sg = beamfit.SuperGaussian(
+        predfun="GaussianProfile1D",
+        predfun_args={"sigma_threshold": 2.5, "median_filter_size": 5},
+    )
+    assert isinstance(sg.predfun, beamfit.GaussianProfile1D)
+    assert sg.predfun.sigma_threshold == 2.5
+    assert sg.predfun.median_filter_size == 5
+
+
+def test_supergaussian_result_serialization():
+    """Test SuperGaussianResult serialization and deserialization"""
+    # Create a result with test data
+    mu = np.array([128.5, 256.3])
+    sigma = np.array([[50.2, 5.1], [5.1, 40.8]])
+    c = np.eye(8) * 0.1  # Simple covariance matrix
+
+    result1 = beamfit.SuperGaussianResult(
+        mu=mu, sigma=sigma, n=1.2, a=0.95, o=0.05, c=c
+    )
+
+    # Serialize to dict
+    result_dict = result1.model_dump()
+
+    # Verify dict structure
+    assert "mu" in result_dict
+    assert "sigma" in result_dict
+    assert "n" in result_dict
+    assert "a" in result_dict
+    assert "o" in result_dict
+    assert "c" in result_dict
+
+    # Deserialize from dict
+    result2 = beamfit.SuperGaussianResult.model_validate(result_dict)
+
+    # Verify deserialized values match
+    np.testing.assert_allclose(result2.mu, mu)
+    np.testing.assert_allclose(result2.sigma, sigma)
+    assert result2.n == 1.2
+    assert result2.a == 0.95
+    assert result2.o == 0.05
+    np.testing.assert_allclose(result2.c, c)
+
+
+def test_supergaussian_result_h_property():
+    """Test SuperGaussianResult h property getter and setter"""
+    # Create result using h array
+    h = np.array([128, 256, 50**2, 10, 40**2, 1.0, 0.95, 0.05])
+    result = beamfit.SuperGaussianResult(h=h, c=np.eye(8))
+
+    # Verify h property returns correct array
+    np.testing.assert_allclose(result.h, h)
+
+    # Verify individual fields
+    assert result.mu[0] == 128
+    assert result.mu[1] == 256
+    assert result.sigma[0, 0] == 50**2
+    assert result.sigma[0, 1] == 10
+    assert result.sigma[1, 1] == 40**2
+    assert result.n == 1.0
+    assert result.a == 0.95
+    assert result.o == 0.05
+
+
+def test_supergaussian_result_json_serialization():
+    """Test SuperGaussianResult JSON serialization and deserialization"""
+    # Create a result with test data
+    mu = np.array([128.5, 256.3])
+    sigma = np.array([[50.2, 5.1], [5.1, 40.8]])
+    c = np.eye(8) * 0.1
+
+    result1 = beamfit.SuperGaussianResult(
+        mu=mu, sigma=sigma, n=1.2, a=0.95, o=0.05, c=c
+    )
+
+    # Serialize to JSON
+    json_str = result1.model_dump_json()
+
+    # Verify it's valid JSON
+    assert isinstance(json_str, str)
+
+    # Deserialize from JSON
+    result2 = beamfit.SuperGaussianResult.model_validate_json(json_str)
+
+    # Verify deserialized values match
+    np.testing.assert_allclose(result2.mu, mu)
+    np.testing.assert_allclose(result2.sigma, sigma)
+    assert result2.n == 1.2
+    assert result2.a == 0.95
+    assert result2.o == 0.05
+    np.testing.assert_allclose(result2.c, c)
