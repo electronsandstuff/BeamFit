@@ -227,7 +227,7 @@ class SuperGaussian(AnalysisMethod):
     @model_validator(mode="before")
     @classmethod
     def handle_legacy_init(cls, data: Any) -> Any:
-        """Handle legacy __init__ interface with string names and *_args dicts"""
+        """Handle legacy __init__ interface with string names and kwarg dicts"""
         if not isinstance(data, dict):
             return data
 

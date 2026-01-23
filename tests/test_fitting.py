@@ -301,3 +301,32 @@ def test_supergaussian_result_h_property():
     assert result.n == 1.0
     assert result.a == 0.95
     assert result.o == 0.05
+
+
+def test_supergaussian_result_json_serialization():
+    """Test SuperGaussianResult JSON serialization and deserialization"""
+    # Create a result with test data
+    mu = np.array([128.5, 256.3])
+    sigma = np.array([[50.2, 5.1], [5.1, 40.8]])
+    c = np.eye(8) * 0.1
+
+    result1 = beamfit.SuperGaussianResult(
+        mu=mu, sigma=sigma, n=1.2, a=0.95, o=0.05, c=c
+    )
+
+    # Serialize to JSON
+    json_str = result1.model_dump_json()
+
+    # Verify it's valid JSON
+    assert isinstance(json_str, str)
+
+    # Deserialize from JSON
+    result2 = beamfit.SuperGaussianResult.model_validate_json(json_str)
+
+    # Verify deserialized values match
+    np.testing.assert_allclose(result2.mu, mu)
+    np.testing.assert_allclose(result2.sigma, sigma)
+    assert result2.n == 1.2
+    assert result2.a == 0.95
+    assert result2.o == 0.05
+    np.testing.assert_allclose(result2.c, c)
