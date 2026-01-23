@@ -1,4 +1,6 @@
 import numpy as np
+from pydantic import BaseModel, Field
+from typing import Literal
 
 
 ###############################################################################
@@ -76,7 +78,7 @@ def a_to_theta_grad(a):
 ###############################################################################
 
 
-class SigmaParameterization:
+class SigmaParameterization(BaseModel):
     def forward(self, s):
         """
         Transforms the 2x2 matrix s into an unconstrained parameterization
@@ -94,6 +96,8 @@ class SigmaParameterization:
 
 
 class Cholesky(SigmaParameterization):
+    type: Literal["Cholesky"] = "Cholesky"
+
     def forward(self, s):
         a = np.sqrt(s[0, 0])
         b = s[0, 1] / a
@@ -112,8 +116,8 @@ class Cholesky(SigmaParameterization):
 
 
 class LogCholesky(SigmaParameterization):
-    def __init__(self):
-        self.ch = Cholesky()
+    type: Literal["LogCholesky"] = "LogCholesky"
+    ch: Cholesky = Field(default_factory=Cholesky)
 
     def forward(self, s):
         st = self.ch.forward(s)
@@ -130,8 +134,8 @@ class LogCholesky(SigmaParameterization):
 
 
 class Spherical(SigmaParameterization):
-    def __init__(self):
-        self.ch = Cholesky()
+    type: Literal["Spherical"] = "Spherical"
+    ch: Cholesky = Field(default_factory=Cholesky)
 
     def forward(self, s):
         st = self.ch.forward(s)
@@ -189,6 +193,8 @@ class Spherical(SigmaParameterization):
 
 
 class MatrixLogarithm(SigmaParameterization):
+    type: Literal["MatrixLogarithm"] = "MatrixLogarithm"
+
     def forward(self, s):
         theta, v1, v2 = eigen2d([s[0, 0], s[0, 1], s[1, 1]])
         u = rot_mat_2d(theta)
@@ -220,6 +226,8 @@ class MatrixLogarithm(SigmaParameterization):
 
 
 class Givens(SigmaParameterization):
+    type: Literal["Givens"] = "Givens"
+
     def forward(self, s):
         theta, v1, v2 = eigen2d([s[0, 0], s[0, 1], s[1, 1]])
         return np.array([np.log(v1), np.log(v2 - v1), np.log(theta / (np.pi - theta))])

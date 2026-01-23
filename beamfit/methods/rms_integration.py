@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Union, Any
+from typing import Union, Any, Literal
 
 from ..base import AnalysisMethod, Setting
 from ..utils import SuperGaussianResult
@@ -12,8 +12,7 @@ class RMSIntegration(AnalysisMethod):
     $E[g(x,y)] = \int\int f(x,y)*g(x,y)*dx*dy$ for the normalized distribution $f(x,y)$.
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    type: Literal["RMSIntegration"] = "RMSIntegration"
 
     def __fit__(self, image, image_sigmas=None):
         lo, hi = image.min(), image.max()  # Normalize image

@@ -1,10 +1,21 @@
 import numpy as np
 import scipy.optimize as opt
-from typing import Union, Any
+from typing import Union, Any, Annotated, Literal
+from pydantic import Field, Discriminator
 
 from ... import factory
 from ...base import AnalysisMethod, Setting
 from ...utils import SuperGaussianResult
+from .sigma_transformations import (
+    Cholesky,
+    LogCholesky,
+    Spherical,
+    MatrixLogarithm,
+    Givens,
+)
+from ..gaussian_fit_1d import GaussianProfile1D
+from ..gaussian_linear_least_squares import GaussianLinearLeastSquares
+from ..rms_integration import RMSIntegration
 
 
 def supergaussian(x, y, mu_x, mu_y, sigma_xx, sigma_xy, sigma_yy, n, a, o):
@@ -195,25 +206,22 @@ class SuperGaussian(AnalysisMethod):
       f(r) = a*exp(-(1/2(r - mu)^T Sigma^{-1} (r - mu))^n) + o
     """
 
-    def __init__(
-        self,
-        predfun="GaussianProfile1D",
-        predfun_args=None,
-        sig_param="LogCholesky",
-        sig_param_args=None,
-        maxfev=100,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        if sig_param_args is None:
-            sig_param_args = {}
-        if predfun_args is None:
-            predfun_args = {}
-        self.predfun = factory.create("analysis", predfun, **predfun_args)
-        self.predfun_args = predfun_args
-        self.maxfev = maxfev
-        self.sig_param = factory.create("sig_param", sig_param, **sig_param_args)
-        self.sig_param_args = sig_param_args
+    type: Literal["SuperGaussian"] = "SuperGaussian"
+    predfun: Annotated[
+        Union[GaussianProfile1D, GaussianLinearLeastSquares, RMSIntegration],
+        Discriminator("type"),
+    ] = Field(
+        default_factory=GaussianProfile1D,
+        description="Which fit method is used for initial guess of fit parameters.",
+    )
+    sig_param: Annotated[
+        Union[Cholesky, LogCholesky, Spherical, MatrixLogarithm, Givens],
+        Discriminator("type"),
+    ] = Field(
+        default_factory=LogCholesky,
+        description="Which unbounded parameterization of the covariance matrix to use during the fitting",
+    )
+    maxfev: int = 100
 
     def __fit__(self, image, image_sigmas=None):
         lo, hi = image.min(), image.max()  # Normalize image
