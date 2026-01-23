@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.optimize as opt
+import warnings
 from typing import Union, Any, Annotated, Literal
 from pydantic import Field, Discriminator, model_validator
 
@@ -232,12 +233,24 @@ class SuperGaussian(AnalysisMethod):
 
         # Handle legacy predfun string interface
         if "predfun" in data and isinstance(data["predfun"], str):
+            warnings.warn(
+                "Passing 'predfun' as string and kwargs is deprecated. "
+                "Pass an instance of the analysis method directly instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             predfun_name = data["predfun"]
             predfun_args = data.pop("predfun_args", {})
             data["predfun"] = factory.create("analysis", predfun_name, **predfun_args)
 
         # Handle legacy sig_param string interface
         if "sig_param" in data and isinstance(data["sig_param"], str):
+            warnings.warn(
+                "Passing 'sig_param' as string and kwargs is deprecated. "
+                "Pass an instance of the sigma parameterization directly instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             sig_param_name = data["sig_param"]
             sig_param_args = data.pop("sig_param_args", {})
             data["sig_param"] = factory.create(
