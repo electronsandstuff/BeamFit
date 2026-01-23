@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.optimize as opt
 from typing import Union, Any, Annotated, Literal
-from pydantic import Field, Discriminator
+from pydantic import Field, Discriminator, model_validator
 
 from ... import factory
 from ...base import AnalysisMethod, Setting
@@ -222,6 +222,29 @@ class SuperGaussian(AnalysisMethod):
         description="Which unbounded parameterization of the covariance matrix to use during the fitting",
     )
     maxfev: int = 100
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_legacy_init(cls, data: Any) -> Any:
+        """Handle legacy __init__ interface with string names and *_args dicts"""
+        if not isinstance(data, dict):
+            return data
+
+        # Handle legacy predfun string interface
+        if "predfun" in data and isinstance(data["predfun"], str):
+            predfun_name = data["predfun"]
+            predfun_args = data.pop("predfun_args", {})
+            data["predfun"] = factory.create("analysis", predfun_name, **predfun_args)
+
+        # Handle legacy sig_param string interface
+        if "sig_param" in data and isinstance(data["sig_param"], str):
+            sig_param_name = data["sig_param"]
+            sig_param_args = data.pop("sig_param_args", {})
+            data["sig_param"] = factory.create(
+                "sig_param", sig_param_name, **sig_param_args
+            )
+
+        return data
 
     def __fit__(self, image, image_sigmas=None):
         lo, hi = image.min(), image.max()  # Normalize image

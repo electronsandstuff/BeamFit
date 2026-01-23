@@ -204,3 +204,46 @@ def test_gaussian_linear_least_squares_trans_grad(x0):
         beamfit.gaussian_lls_trans, x0=x0, fn_type="vector"
     )
     np.testing.assert_allclose(beamfit.gaussian_lls_trans_grad(x0), j, atol=1e-10)
+
+
+@pytest.mark.parametrize(
+    "predfun,expected_class",
+    [
+        ("GaussianProfile1D", beamfit.GaussianProfile1D),
+        ("GaussianLinearLeastSquares", beamfit.GaussianLinearLeastSquares),
+        ("RMSIntegration", beamfit.RMSIntegration),
+    ],
+)
+def test_supergaussian_init_predfun_string(predfun, expected_class):
+    """Test SuperGaussian initialization with string predfun names"""
+    sg = beamfit.SuperGaussian(predfun=predfun)
+    assert isinstance(sg.predfun, expected_class)
+    assert sg.predfun.type == predfun
+
+
+@pytest.mark.parametrize(
+    "sig_param,expected_class",
+    [
+        ("Cholesky", beamfit.Cholesky),
+        ("LogCholesky", beamfit.LogCholesky),
+        ("Spherical", beamfit.Spherical),
+        ("MatrixLogarithm", beamfit.MatrixLogarithm),
+        ("Givens", beamfit.Givens),
+    ],
+)
+def test_supergaussian_init_sig_param_string(sig_param, expected_class):
+    """Test SuperGaussian initialization with string sig_param names"""
+    sg = beamfit.SuperGaussian(sig_param=sig_param)
+    assert isinstance(sg.sig_param, expected_class)
+    assert sg.sig_param.type == sig_param
+
+
+def test_supergaussian_init_with_predfun_args():
+    """Test SuperGaussian initialization with predfun_args"""
+    sg = beamfit.SuperGaussian(
+        predfun="GaussianProfile1D",
+        predfun_args={"sigma_threshold": 2.5, "median_filter_size": 5},
+    )
+    assert isinstance(sg.predfun, beamfit.GaussianProfile1D)
+    assert sg.predfun.sigma_threshold == 2.5
+    assert sg.predfun.median_filter_size == 5
