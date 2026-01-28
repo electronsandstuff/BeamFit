@@ -3,6 +3,7 @@ import pickle
 import pytest
 import numpy as np
 import beamfit
+from beamfit.filters import SigmaThresholdFilter, MedianFilter
 
 
 def get_mu_sigma_numerical(h):
@@ -245,8 +246,10 @@ def test_supergaussian_init_with_predfun_args():
         predfun_args={"sigma_threshold": 2.5, "median_filter_size": 5},
     )
     assert isinstance(sg.predfun, beamfit.GaussianProfile1D)
-    assert sg.predfun.sigma_threshold == 2.5
-    assert sg.predfun.median_filter_size == 5
+    assert isinstance(sg.predfun.filters[0], SigmaThresholdFilter)
+    assert sg.predfun.filters[0].sigma == 2.5
+    assert isinstance(sg.predfun.filters[1], MedianFilter)
+    assert sg.predfun.filters[1].kernel_size == 5
 
 
 def test_supergaussian_result_serialization():
