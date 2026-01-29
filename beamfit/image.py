@@ -69,7 +69,7 @@ class BeamImage:
         if mask is not None:
             self._mask = np.array(mask, dtype=bool)
         else:
-            self._mask = None
+            self._mask = np.ma.nomask
 
     @property
     def processed(self) -> np.ma.MaskedArray:
@@ -90,7 +90,19 @@ class BeamImage:
             result = result - darkfield_avg
 
         # Create masked array
-        if self._mask is not None:
-            return np.ma.array(result, mask=self._mask)
-        else:
-            return np.ma.array(result)
+        return np.ma.masked_array(result, mask=self._mask)
+
+    @property
+    def pixel_weights(self) -> np.ma.MaskedArray:
+        """
+        Weighting factor of each pixel based on its variance for use in analysis methods.
+        """
+        std_image = np.ma.masked_array(
+            data=np.sqrt(
+                np.std(self._data_images, axis=0) ** 2
+                + np.std(self._darkfield_images, axis=0) ** 2
+            ),
+            mask=self._mask,
+        )
+        image_weight = len(self._data_images) / std_image**2
+        return image_weight
