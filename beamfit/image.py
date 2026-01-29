@@ -93,9 +93,9 @@ class BeamImage:
         return np.ma.masked_array(result, mask=self._mask)
 
     @property
-    def pixel_weights(self) -> np.ma.MaskedArray:
+    def pixel_std_devs(self) -> np.ma.MaskedArray:
         """
-        Weighting factor of each pixel based on its variance for use in analysis methods.
+        Standard deviation of the pixel values from sample estimator.
         """
         std_image = np.ma.masked_array(
             data=np.sqrt(
@@ -104,5 +104,11 @@ class BeamImage:
             ),
             mask=self._mask,
         )
-        image_weight = len(self._data_images) / std_image**2
-        return image_weight
+        return std_image
+
+    @property
+    def pixel_weights(self) -> np.ma.MaskedArray:
+        """
+        Weighting factor of each pixel based on its variance for use in analysis methods.
+        """
+        return len(self._data_images) / self.pixel_std_devs**2

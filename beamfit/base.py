@@ -4,7 +4,9 @@ from dataclasses import dataclass
 from typing import Union, Any
 from abc import ABC
 from pydantic import BaseModel, model_validator
-from beamfit.filters import FilterUnion, SigmaThresholdFilter, MedianFilter
+
+from .filters import FilterUnion, SigmaThresholdFilter, MedianFilter
+from .image import BeamImage
 
 
 @dataclass
@@ -64,7 +66,9 @@ class AnalysisMethod(BaseModel, ABC):
 
         return data
 
-    def fit(self, image, image_sigmas=None):
+    def fit(
+        self, image: Union[BeamImage, np.ndarray, np.ma.MaskedArray], image_sigmas=None
+    ):
         """
         Measure the RMS size and centroid of the supplied image.
 
@@ -74,26 +78,34 @@ class AnalysisMethod(BaseModel, ABC):
 
         Parameters
         ----------
-        image : np.ndarray or np.ma.array, 2D
-            The image as a grayscale array or masked array of pixels.
+        image : BeamImage or 2D array
+            The image as image object or a grayscale array of (possibly) masked of pixels.
         image_sigmas : array-like, optional
-            The uncertainty in each pixel intensity.
+            The uncertainty in each pixel intensity. Not used if `BeamImage` object is passed.
 
         Returns
         -------
         AnalysisResult
             Analysis result object (depends on analysis method).
         """
-        if not np.ma.isMaskedArray(image):  # Make a mask if there isn't one
-            image = np.ma.array(image)
+        if isinstance(image, BeamImage):
+            _img = image.processed
+            _sigmas = image.pixel_std_devs
+            if image_sigmas is not None:
+                raise ValueError("When image is a `BeamImage`, cannot use image_sigmas")
+        else:
+            if not np.ma.isMaskedArray(image):  # Make a mask if there isn't one
+                image = np.ma.array(image)
+            _img = image
+            _sigmas = image_sigmas
 
         # Apply all filters in order
         for filter in self.filters:
-            image = filter.apply(image)
+            _img = filter.apply(_img)
 
-        return self.__fit__(image, image_sigmas)
+        return self.__fit__(image, _sigmas)
 
-    def __fit__(self, image, image_sigmas=None):
+    def __fit__(self, _img, image_sigmas=None):
         """
         Implement the actual fitting method in child classes using this method.
         """
