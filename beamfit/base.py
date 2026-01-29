@@ -1,10 +1,10 @@
 from __future__ import annotations
 import numpy as np
-import scipy.signal as signal
 from dataclasses import dataclass
 from typing import Union, Any
 from abc import ABC
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
+from beamfit.filters import FilterUnion, SigmaThresholdFilter, MedianFilter
 
 
 @dataclass
@@ -27,8 +27,42 @@ class AnalysisMethod(BaseModel, ABC):
     Parent class for all methods of getting first and second moments from a beam image.
     """
 
-    sigma_threshold: float | None = None
-    median_filter_size: int | None = None
+    filters: list[FilterUnion] = []
+
+    @model_validator(mode="before")
+    @classmethod
+    def convert_legacy_fields(cls, data: Any) -> Any:
+        """
+        Convert legacy sigma_threshold and median_filter_size fields to the new filters list.
+        Raises an error if both legacy fields and filters list are specified.
+        """
+        if isinstance(data, dict):
+            has_legacy = "sigma_threshold" in data or "median_filter_size" in data
+            has_filters = "filters" in data
+
+            if has_legacy and has_filters:
+                raise ValueError(
+                    "Cannot specify both legacy fields (sigma_threshold, median_filter_size) "
+                    "and new filters list. Please use only the filters list."
+                )
+
+            if has_legacy:
+                filters = []
+
+                # Convert sigma_threshold to SigmaThresholdFilter
+                if data.get("sigma_threshold") is not None:
+                    filters.append(SigmaThresholdFilter(sigma=data["sigma_threshold"]))
+
+                # Convert median_filter_size to MedianFilter
+                if data.get("median_filter_size") is not None:
+                    filters.append(MedianFilter(kernel_size=data["median_filter_size"]))
+
+                data["filters"] = filters
+                # Remove legacy fields from data
+                data.pop("sigma_threshold", None)
+                data.pop("median_filter_size", None)
+
+        return data
 
     def fit(self, image, image_sigmas=None):
         """
@@ -52,15 +86,11 @@ class AnalysisMethod(BaseModel, ABC):
         """
         if not np.ma.isMaskedArray(image):  # Make a mask if there isn't one
             image = np.ma.array(image)
-        if self.median_filter_size is not None:  # Median filter the image if required
-            image = np.ma.array(
-                signal.medfilt2d(image, kernel_size=self.median_filter_size),
-                mask=image.mask,
-            )
-        if self.sigma_threshold is not None:  # Apply threshold if provided
-            image.mask = np.bitwise_or(
-                image.mask, image < (image.max() * np.exp(-(self.sigma_threshold**2)))
-            )
+
+        # Apply all filters in order
+        for filter in self.filters:
+            image = filter.apply(image)
+
         return self.__fit__(image, image_sigmas)
 
     def __fit__(self, image, image_sigmas=None):
@@ -79,8 +109,7 @@ class AnalysisMethod(BaseModel, ABC):
             Class config information
         """
         ret = {
-            "sigma_threshold": self.sigma_threshold,
-            "median_filter_size": self.median_filter_size,
+            "filters": [filter.model_dump() for filter in self.filters],
         }
         ret.update(self.__get_config_dict__())
         return ret
@@ -133,19 +162,20 @@ class AnalysisMethod(BaseModel, ABC):
         settings : dict[str, str]
             Mapping from setting name to setting value
         """
+        filters = []
+
         if settings["Sigma Threshold"] == "On":
             sigma_threshold = float(settings["Sigma Threshold Size"])
             if sigma_threshold <= 0.0:
                 raise ValueError(
                     f"Sigma threshold must be greater than zero, got {sigma_threshold}"
                 )
-            self.sigma_threshold = sigma_threshold
-        elif settings["Sigma Threshold"] == "Off":
-            self.sigma_threshold = None
-        else:
+            filters.append(SigmaThresholdFilter(sigma=sigma_threshold))
+        elif settings["Sigma Threshold"] != "Off":
             raise ValueError(
                 f'Unrecognized value for "Sigma Threshold": "{settings["Sigma Threshold"]}"'
             )
+
         if settings["Median Filter"] == "On":
             median_filter_size = int(settings["Median Filter Size"])
             if median_filter_size < 3:
@@ -156,13 +186,13 @@ class AnalysisMethod(BaseModel, ABC):
                 raise ValueError(
                     f"Median filter size must be odd integer, not {median_filter_size}"
                 )
-            self.median_filter_size = median_filter_size
-        elif settings["Median Filter"] == "Off":
-            self.median_filter_size = None
-        else:
+            filters.append(MedianFilter(kernel_size=median_filter_size))
+        elif settings["Median Filter"] != "Off":
             raise ValueError(
                 f'Unrecognized value for "Median Filter": "{settings["Median Filter"]}"'
             )
+
+        self.filters = filters
         self.__set_from_settings__(settings)
 
     def __set_from_settings__(self, settings: dict[str, Union[str, dict[str, Any]]]):
