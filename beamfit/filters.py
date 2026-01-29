@@ -1,9 +1,10 @@
 from __future__ import annotations
 import numpy as np
 import scipy.signal as signal
-from typing import Literal
+from typing import Literal, Union
+from typing_extensions import Annotated
 from abc import ABC
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, Discriminator
 
 
 class ImageFilter(BaseModel, ABC):
@@ -67,3 +68,9 @@ class MedianFilter(ImageFilter):
         """Apply median filtering to the image."""
         filtered = signal.medfilt2d(image.data, kernel_size=self.kernel_size)
         return np.ma.array(filtered, mask=image.mask)
+
+
+# Discriminated union of all filter types
+FilterUnion = Annotated[
+    Union[SigmaThresholdFilter, MedianFilter], Discriminator("type")
+]

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Union, Any
 from abc import ABC
 from pydantic import BaseModel, model_validator
-from beamfit.filters import ImageFilter, SigmaThresholdFilter, MedianFilter
+from beamfit.filters import FilterUnion, SigmaThresholdFilter, MedianFilter
 
 
 @dataclass
@@ -27,7 +27,7 @@ class AnalysisMethod(BaseModel, ABC):
     Parent class for all methods of getting first and second moments from a beam image.
     """
 
-    filters: list[ImageFilter] = []
+    filters: list[FilterUnion] = []
 
     @model_validator(mode="before")
     @classmethod
