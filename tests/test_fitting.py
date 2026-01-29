@@ -102,9 +102,9 @@ def test_fit_supergaussian(test_data):
     # Fit it and Compare
     res = beamfit.SuperGaussian().fit(test_image)
     # test_h, test_C = beamfit.fit_supergaussian(test_image)
-    np.testing.assert_allclose(res.h, valid_h, rtol=0.2)
+    np.testing.assert_allclose(res.h, valid_h, rtol=0.1)
     res = beamfit.SuperGaussian().fit(test_image, np.ones_like(test_image))
-    np.testing.assert_allclose(res.h, valid_h, rtol=0.2)
+    np.testing.assert_allclose(res.h, valid_h, rtol=0.1)
 
 
 def test_supergaussian(test_data):
