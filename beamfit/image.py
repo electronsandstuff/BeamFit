@@ -6,8 +6,8 @@ class BeamImage:
     def __init__(
         self,
         *,
-        data_images: list[Union[np.ndarray, np.ma.array]],
-        darkfield_images: list[Union[np.ndarray, np.ma.array]] | None = None,
+        data_images: list[Union[np.ndarray, np.ma.MaskedArray]],
+        darkfield_images: list[Union[np.ndarray, np.ma.MaskedArray]] | None = None,
         mask: np.ndarray | None = None,
     ):
         """
@@ -16,9 +16,9 @@ class BeamImage:
 
         Parameters
         ----------
-        data_images : list[Union[np.ndarray, np.ma.array]]
+        data_images : list[Union[np.ndarray, np.ma.MaskedArray]]
             Images including the beam data, to be averaged
-        darkfield_images : list[Union[np.ndarray, np.ma.array]] | None, optional
+        darkfield_images : list[Union[np.ndarray, np.ma.MaskedArray]] | None, optional
             Images for background subtraction (ie turn off beam source and retake images), to be averaged, by default None
         mask : np.ndarray | None, optional
             Boolean image, true (greater pixel value than zero) means pixel is "masked" (not used in analysis), by default None
@@ -30,16 +30,16 @@ class BeamImage:
 
         # Type checks
         for idx, img in enumerate(data_images):
-            if not isinstance(img, (np.array, np.ma.array)):
+            if not isinstance(img, (np.ndarray, np.ma.MaskedArray)):
                 raise ValueError(
                     f"Data images must np.array or np.ma.array; type(data_images[{idx}])={type(img)}"
                 )
         for idx, img in enumerate(darkfield_images):
-            if not isinstance(img, (np.array, np.ma.array)):
+            if not isinstance(img, (np.ndarray, np.ma.MaskedArray)):
                 raise ValueError(
                     f"Darkfield images must np.array or np.ma.array; type(darkfield_images[{idx}])={type(img)}"
                 )
-        if not isinstance(mask, (np.array, None)):
+        if not isinstance(mask, (np.ndarray, type(None))):
             raise ValueError(f"Mask must be None or np.array; type(mask)={type(mask)}")
 
         # Check all image shapes
