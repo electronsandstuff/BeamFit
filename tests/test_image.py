@@ -174,12 +174,12 @@ def test_no_mask():
     assert result.mask is np.ma.nomask or not result.mask.any()
 
 
-def test_pixel_std_devs_one_data_no_darkfield():
-    """Test pixel_std_devs with one data image and no darkfield."""
+def test_pixel_sigmas_one_data_no_darkfield():
+    """Test pixel_sigmas with one data image and no darkfield."""
     data1 = np.full((10, 10), 5.0)
 
     beam = BeamImage(data_images=[data1])
-    std_devs = beam.pixel_std_devs
+    std_devs = beam.pixel_sigmas
 
     # Check no errors and no NaN
     assert isinstance(std_devs, np.ma.MaskedArray)
@@ -189,13 +189,13 @@ def test_pixel_std_devs_one_data_no_darkfield():
     assert np.allclose(std_devs, 0.0)
 
 
-def test_pixel_std_devs_one_data_one_darkfield():
-    """Test pixel_std_devs with one data image and one darkfield."""
+def test_pixel_sigmas_one_data_one_darkfield():
+    """Test pixel_sigmas with one data image and one darkfield."""
     data1 = np.full((10, 10), 5.0)
     dark1 = np.full((10, 10), 1.0)
 
     beam = BeamImage(data_images=[data1], darkfield_images=[dark1])
-    std_devs = beam.pixel_std_devs
+    std_devs = beam.pixel_sigmas
 
     # Check no errors and no NaN
     assert isinstance(std_devs, np.ma.MaskedArray)
@@ -205,15 +205,15 @@ def test_pixel_std_devs_one_data_one_darkfield():
     assert np.allclose(std_devs, 0.0)
 
 
-def test_pixel_std_devs_one_data_multiple_darkfield():
-    """Test pixel_std_devs with one data image and multiple darkfield images."""
+def test_pixel_sigmas_one_data_multiple_darkfield():
+    """Test pixel_sigmas with one data image and multiple darkfield images."""
     data1 = np.full((10, 10), 5.0)
     dark1 = np.full((10, 10), 1.0)
     dark2 = np.full((10, 10), 2.0)
     dark3 = np.full((10, 10), 3.0)
 
     beam = BeamImage(data_images=[data1], darkfield_images=[dark1, dark2, dark3])
-    std_devs = beam.pixel_std_devs
+    std_devs = beam.pixel_sigmas
 
     # Check no errors and no NaN
     assert isinstance(std_devs, np.ma.MaskedArray)
@@ -224,14 +224,14 @@ def test_pixel_std_devs_one_data_multiple_darkfield():
     assert np.allclose(std_devs, expected_std)
 
 
-def test_pixel_std_devs_multiple_data_no_darkfield():
-    """Test pixel_std_devs with multiple data images and no darkfield."""
+def test_pixel_sigmas_multiple_data_no_darkfield():
+    """Test pixel_sigmas with multiple data images and no darkfield."""
     data1 = np.full((10, 10), 4.0)
     data2 = np.full((10, 10), 5.0)
     data3 = np.full((10, 10), 6.0)
 
     beam = BeamImage(data_images=[data1, data2, data3])
-    std_devs = beam.pixel_std_devs
+    std_devs = beam.pixel_sigmas
 
     # Check no errors and no NaN
     assert isinstance(std_devs, np.ma.MaskedArray)
@@ -242,15 +242,15 @@ def test_pixel_std_devs_multiple_data_no_darkfield():
     assert np.allclose(std_devs, expected_std)
 
 
-def test_pixel_std_devs_multiple_data_one_darkfield():
-    """Test pixel_std_devs with multiple data images and one darkfield."""
+def test_pixel_sigmas_multiple_data_one_darkfield():
+    """Test pixel_sigmas with multiple data images and one darkfield."""
     data1 = np.full((10, 10), 4.0)
     data2 = np.full((10, 10), 5.0)
     data3 = np.full((10, 10), 6.0)
     dark1 = np.full((10, 10), 1.0)
 
     beam = BeamImage(data_images=[data1, data2, data3], darkfield_images=[dark1])
-    std_devs = beam.pixel_std_devs
+    std_devs = beam.pixel_sigmas
 
     # Check no errors and no NaN
     assert isinstance(std_devs, np.ma.MaskedArray)
@@ -261,8 +261,8 @@ def test_pixel_std_devs_multiple_data_one_darkfield():
     assert np.allclose(std_devs, expected_std)
 
 
-def test_pixel_std_devs_multiple_data_multiple_darkfield():
-    """Test pixel_std_devs with multiple data and darkfield images."""
+def test_pixel_sigmas_multiple_data_multiple_darkfield():
+    """Test pixel_sigmas with multiple data and darkfield images."""
     data1 = np.full((10, 10), 4.0)
     data2 = np.full((10, 10), 5.0)
     data3 = np.full((10, 10), 6.0)
@@ -273,7 +273,7 @@ def test_pixel_std_devs_multiple_data_multiple_darkfield():
     beam = BeamImage(
         data_images=[data1, data2, data3], darkfield_images=[dark1, dark2, dark3]
     )
-    std_devs = beam.pixel_std_devs
+    std_devs = beam.pixel_sigmas
 
     # Check no errors and no NaN
     assert isinstance(std_devs, np.ma.MaskedArray)
@@ -284,108 +284,3 @@ def test_pixel_std_devs_multiple_data_multiple_darkfield():
     dark_std = np.std([1.0, 2.0, 3.0])
     expected_std = np.sqrt(data_std**2 + dark_std**2)
     assert np.allclose(std_devs, expected_std)
-
-
-def test_pixel_weights_one_data_one_darkfield():
-    """Test pixel_weights with one data image and one darkfield."""
-    data1 = np.full((10, 10), 5.0)
-    dark1 = np.full((10, 10), 1.0)
-
-    beam = BeamImage(data_images=[data1], darkfield_images=[dark1])
-    weights = beam.pixel_weights
-
-    # Check no errors and no NaN
-    assert isinstance(weights, np.ma.MaskedArray)
-    assert not np.any(np.isnan(weights))
-    assert not np.any(np.isinf(weights))
-
-    # Expected: 1.0 for one data, one darkfield case
-    assert np.allclose(weights, 1.0)
-
-
-def test_pixel_weights_one_data_multiple_darkfield():
-    """Test pixel_weights with one data image and multiple darkfield images."""
-    data1 = np.full((10, 10), 5.0)
-    dark1 = np.full((10, 10), 1.0)
-    dark2 = np.full((10, 10), 2.0)
-    dark3 = np.full((10, 10), 3.0)
-
-    beam = BeamImage(data_images=[data1], darkfield_images=[dark1, dark2, dark3])
-    weights = beam.pixel_weights
-
-    # Check no errors and no NaN
-    assert isinstance(weights, np.ma.MaskedArray)
-    assert not np.any(np.isnan(weights))
-    assert not np.any(np.isinf(weights))
-
-    # Expected: n_data / std([1, 2, 3])^2 = 1 / std([1, 2, 3])^2
-    dark_std = np.std([1.0, 2.0, 3.0])
-    expected_weight = 1 / dark_std**2
-    assert np.allclose(weights, expected_weight)
-
-
-def test_pixel_weights_multiple_data_no_darkfield():
-    """Test pixel_weights with multiple data images and no darkfield."""
-    data1 = np.full((10, 10), 4.0)
-    data2 = np.full((10, 10), 5.0)
-    data3 = np.full((10, 10), 6.0)
-
-    beam = BeamImage(data_images=[data1, data2, data3])
-    weights = beam.pixel_weights
-
-    # Check no errors and no NaN or inf
-    assert isinstance(weights, np.ma.MaskedArray)
-    assert not np.any(np.isnan(weights))
-    assert not np.any(np.isinf(weights))
-
-    # Expected: n_data / std_devs^2 = 3 / std([4, 5, 6])^2
-    data_std = np.std([4.0, 5.0, 6.0])
-    expected_weight = 3 / data_std**2
-    assert np.allclose(weights, expected_weight)
-
-
-def test_pixel_weights_multiple_data_one_darkfield():
-    """Test pixel_weights with multiple data images and one darkfield."""
-    data1 = np.full((10, 10), 4.0)
-    data2 = np.full((10, 10), 5.0)
-    data3 = np.full((10, 10), 6.0)
-    dark1 = np.full((10, 10), 1.0)
-
-    beam = BeamImage(data_images=[data1, data2, data3], darkfield_images=[dark1])
-    weights = beam.pixel_weights
-
-    # Check no errors and no NaN or inf
-    assert isinstance(weights, np.ma.MaskedArray)
-    assert not np.any(np.isnan(weights))
-    assert not np.any(np.isinf(weights))
-
-    # Expected: n_data / std_devs^2
-    data_std = np.std([4.0, 5.0, 6.0])
-    expected_weight = 3 / data_std**2
-    assert np.allclose(weights, expected_weight)
-
-
-def test_pixel_weights_multiple_data_multiple_darkfield():
-    """Test pixel_weights with multiple data and darkfield images."""
-    data1 = np.full((10, 10), 4.0)
-    data2 = np.full((10, 10), 5.0)
-    data3 = np.full((10, 10), 6.0)
-    dark1 = np.full((10, 10), 1.0)
-    dark2 = np.full((10, 10), 2.0)
-    dark3 = np.full((10, 10), 3.0)
-
-    beam = BeamImage(
-        data_images=[data1, data2, data3], darkfield_images=[dark1, dark2, dark3]
-    )
-    weights = beam.pixel_weights
-
-    # Check no errors and no NaN or inf
-    assert isinstance(weights, np.ma.MaskedArray)
-    assert not np.any(np.isnan(weights))
-    assert not np.any(np.isinf(weights))
-
-    # Expected: n_data / (sqrt(data_std^2 + dark_std^2))^2
-    data_std = np.std([4.0, 5.0, 6.0])
-    dark_std = np.std([1.0, 2.0, 3.0])
-    expected_weight = 3 / (data_std**2 + dark_std**2)
-    assert np.allclose(weights, expected_weight)

@@ -90,7 +90,10 @@ class AnalysisMethod(BaseModel, ABC):
         """
         if isinstance(image, BeamImage):
             _img = image.processed
-            _sigmas = image.pixel_std_devs
+            if image.sigmas_are_valid:
+                _sigmas = image.pixel_sigmas
+            else:
+                _sigmas = None
             if image_sigmas is not None:
                 raise ValueError("When image is a `BeamImage`, cannot use image_sigmas")
         else:
@@ -103,9 +106,9 @@ class AnalysisMethod(BaseModel, ABC):
         for filter in self.filters:
             _img = filter.apply(_img)
 
-        return self.__fit__(image, _sigmas)
+        return self.__fit__(_img, _sigmas)
 
-    def __fit__(self, _img, image_sigmas=None):
+    def __fit__(self, image, image_sigmas=None):
         """
         Implement the actual fitting method in child classes using this method.
         """

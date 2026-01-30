@@ -1,5 +1,6 @@
 from .factory import register, create, unregister, get_names
 from .fit_param_conversion import get_mu_sigma, get_mu_sigma_std
+from .image import BeamImage
 from .methods.gaussian_fit_1d import fit_gaussian_1d, GaussianProfile1D
 from .methods.gaussian_linear_least_squares import (
     GaussianLinearLeastSquares,
@@ -93,4 +94,5 @@ __all__ = [
     "AnalysisMethodDebugger",
     "get_analysis_names",
     "create_analysis",
+    "BeamImage",
 ]

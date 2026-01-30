@@ -93,9 +93,9 @@ class BeamImage:
         return np.ma.masked_array(result, mask=self._mask)
 
     @property
-    def pixel_std_devs(self) -> np.ma.MaskedArray:
+    def pixel_sigmas(self) -> np.ma.MaskedArray:
         """
-        Standard deviation of the pixel values in the processed image from sample estimator.
+        Std. deviation of the estimated value of each pixel after averaging and background subtraction.
         """
         # Calculate variance
         var = np.std(self._data_images, axis=0) ** 2
@@ -106,16 +106,8 @@ class BeamImage:
         return np.ma.masked_array(data=np.sqrt(var), mask=self._mask)
 
     @property
-    def pixel_weights(self) -> np.ma.MaskedArray:
+    def sigmas_are_valid(self) -> bool:
         """
-        Weighting factor of each pixel based on the estimated uncertainty of its mean, subtracted value.
+        Is there enough data for a valid prediction of the pixel sigmas?
         """
-        # Get standard deviation
-        std = self.pixel_std_devs
-
-        # Case for single images
-        if (std == 0.0).all():
-            return np.ones_like(std)
-
-        # One on the estimated variance of the pixel's averaged value
-        return len(self._data_images) / self.pixel_std_devs**2
+        return (len(self._data_images) > 2) or (len(self._darkfield_images) > 2)
