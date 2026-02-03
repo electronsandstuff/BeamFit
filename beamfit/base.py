@@ -88,6 +88,11 @@ class AnalysisMethod(BaseModel, ABC):
         AnalysisResult
             Analysis result object (depends on analysis method).
         """
+        # Handle types for image_sigmas
+        if not isinstance(image_sigmas, (type(None), np.ndarray)):
+            raise ValueError(f"Invalid type for `image_sigmas`: {type(image_sigmas)}")
+
+        # Handle different image types
         if isinstance(image, BeamImage):
             _img = image.processed
             if image.sigmas_are_valid:
@@ -96,11 +101,14 @@ class AnalysisMethod(BaseModel, ABC):
                 _sigmas = None
             if image_sigmas is not None:
                 raise ValueError("When image is a `BeamImage`, cannot use image_sigmas")
-        else:
-            if not np.ma.isMaskedArray(image):  # Make a mask if there isn't one
-                image = np.ma.array(image)
+        elif isinstance(image, np.ndarray):
+            _img = np.ma.array(image)
+            _sigmas = image_sigmas
+        elif isinstance(image, np.ma.MaskedArray):
             _img = image
             _sigmas = image_sigmas
+        else:
+            raise ValueError(f"Invalid type for `image`: {type(image)}")
 
         # Apply all filters in order
         for filter in self.filters:
