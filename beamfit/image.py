@@ -93,7 +93,7 @@ class BeamImage:
         return np.ma.masked_array(result, mask=self._mask)
 
     @property
-    def pixel_sigmas(self) -> np.ma.MaskedArray:
+    def pixel_std_error(self) -> np.ma.MaskedArray:
         """
         Std. deviation of the estimated value of each pixel after averaging and background subtraction.
         """

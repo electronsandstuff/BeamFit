@@ -96,7 +96,7 @@ class AnalysisMethod(BaseModel, ABC):
         if isinstance(image, BeamImage):
             _img = image.processed
             if image.can_estimate_variance:
-                _sigmas = image.pixel_sigmas
+                _sigmas = image.pixel_std_error
             else:
                 _sigmas = None
             if image_sigmas is not None:
