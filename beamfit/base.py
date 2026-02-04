@@ -114,7 +114,9 @@ class AnalysisMethod(BaseModel, ABC):
         if (len(_img.shape) != 2) or not (_img.shape[0] > 8 and _img.shape[1] > 8):
             raise ValueError(f"Invalid shape for image array: {_img.shape}")
         if (_sigmas is not None) and (
-            (_img.shape[0] != _sigmas.shape[0]) or (_img.shape[1] != _sigmas.shape[1])
+            (len(_img.shape) != len(_sigmas.shape))
+            or (_img.shape[0] != _sigmas.shape[0])
+            or (_img.shape[1] != _sigmas.shape[1])
         ):
             raise ValueError(
                 f"Image and sigmas array must match in shape (_img.shape={_img.shape}, _sigmas.shape={_sigmas.shape})"
