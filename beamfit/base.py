@@ -4,7 +4,9 @@ from dataclasses import dataclass
 from typing import Union, Any
 from abc import ABC
 from pydantic import BaseModel, model_validator
-from beamfit.filters import FilterUnion, SigmaThresholdFilter, MedianFilter
+
+from .filters import FilterUnion, SigmaThresholdFilter, MedianFilter
+from .image import BeamImage
 
 
 @dataclass
@@ -64,7 +66,9 @@ class AnalysisMethod(BaseModel, ABC):
 
         return data
 
-    def fit(self, image, image_sigmas=None):
+    def fit(
+        self, image: Union[BeamImage, np.ndarray, np.ma.MaskedArray], image_sigmas=None
+    ):
         """
         Measure the RMS size and centroid of the supplied image.
 
@@ -74,24 +78,55 @@ class AnalysisMethod(BaseModel, ABC):
 
         Parameters
         ----------
-        image : np.ndarray or np.ma.array, 2D
-            The image as a grayscale array or masked array of pixels.
+        image : BeamImage or 2D array
+            The image as image object or a grayscale array of (possibly) masked of pixels.
         image_sigmas : array-like, optional
-            The uncertainty in each pixel intensity.
+            The uncertainty in each pixel intensity. Not used if `BeamImage` object is passed.
 
         Returns
         -------
         AnalysisResult
             Analysis result object (depends on analysis method).
         """
-        if not np.ma.isMaskedArray(image):  # Make a mask if there isn't one
-            image = np.ma.array(image)
+        # Handle types for image_sigmas
+        if not isinstance(image_sigmas, (type(None), np.ndarray)):
+            raise ValueError(f"Invalid type for `image_sigmas`: {type(image_sigmas)}")
+
+        # Handle different image types
+        if isinstance(image, BeamImage):
+            _img = image.get_avg_and_subtracted()
+            if image.can_estimate_variance:
+                _sigmas = image.get_std_error()
+            else:
+                _sigmas = None
+            if image_sigmas is not None:
+                raise ValueError("When image is a `BeamImage`, cannot use image_sigmas")
+        elif isinstance(image, np.ndarray):
+            _img = np.ma.array(image)
+            _sigmas = image_sigmas
+        elif isinstance(image, np.ma.MaskedArray):
+            _img = image
+            _sigmas = image_sigmas
+        else:
+            raise ValueError(f"Invalid type for `image`: {type(image)}")
+
+        # Sanity checks before going on
+        if (len(_img.shape) != 2) or not (_img.shape[0] > 8 and _img.shape[1] > 8):
+            raise ValueError(f"Invalid shape for image array: {_img.shape}")
+        if (_sigmas is not None) and (
+            (len(_img.shape) != len(_sigmas.shape))
+            or (_img.shape[0] != _sigmas.shape[0])
+            or (_img.shape[1] != _sigmas.shape[1])
+        ):
+            raise ValueError(
+                f"Image and sigmas array must match in shape (_img.shape={_img.shape}, _sigmas.shape={_sigmas.shape})"
+            )
 
         # Apply all filters in order
         for filter in self.filters:
-            image = filter.apply(image)
+            _img = filter.apply(_img)
 
-        return self.__fit__(image, image_sigmas)
+        return self.__fit__(_img, _sigmas)
 
     def __fit__(self, image, image_sigmas=None):
         """
