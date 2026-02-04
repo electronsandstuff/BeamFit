@@ -97,16 +97,21 @@ class BeamImage:
         """
         Std. deviation of the estimated value of each pixel after averaging and background subtraction.
         """
+        if not self.can_estimate_variance:
+            raise ValueError("There is not enough data to estimate pixel variances")
+
         # Calculate variance
-        var = np.std(self._data_images, axis=0) ** 2
+        var = np.var(self._data_images, axis=0) / len(self._data_images)
         if self._darkfield_images:
-            var = var + np.std(self._darkfield_images, axis=0) ** 2
+            var = var + np.var(self._darkfield_images, axis=0) / len(
+                self._darkfield_images
+            )
 
         # Pack into masked array
         return np.ma.masked_array(data=np.sqrt(var), mask=self._mask)
 
     @property
-    def sigmas_are_valid(self) -> bool:
+    def can_estimate_variance(self) -> bool:
         """
         Is there enough data for a valid prediction of the pixel sigmas?
         """
