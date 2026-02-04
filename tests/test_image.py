@@ -6,32 +6,32 @@ from beamfit.image import BeamImage
 def test_no_data_images():
     """Test that error is raised when no data images are provided."""
     with pytest.raises(ValueError):
-        BeamImage(data_images=[])
+        BeamImage(signal_images=[])
 
 
 @pytest.mark.parametrize(
-    "data_images,darkfield_images,mask",
+    "signal_images,background_images,mask",
     [
-        # Wrong type in data_images
+        # Wrong type in signal_images
         ([[1, 2, 3]], None, None),
-        # Wrong type in darkfield_images
+        # Wrong type in background_images
         ([np.ones((10, 10))], [[1, 2, 3]], None),
         # Wrong type in mask
         ([np.ones((10, 10))], None, [[True, False]]),
     ],
 )
-def test_wrong_types(data_images, darkfield_images, mask):
+def test_wrong_types(signal_images, background_images, mask):
     """Test that error is raised for wrong types."""
     with pytest.raises(ValueError):
         BeamImage(
-            data_images=data_images,
-            darkfield_images=darkfield_images,
+            signal_images=signal_images,
+            background_images=background_images,
             mask=mask,
         )
 
 
 @pytest.mark.parametrize(
-    "data_images,darkfield_images,mask",
+    "signal_images,background_images,mask",
     [
         ([np.ones((10, 10)), np.ones((10, 12))], None, None),
         ([np.ones((10, 10))], [np.ones((10, 12))], None),
@@ -53,12 +53,12 @@ def test_wrong_types(data_images, darkfield_images, mask):
         ([np.ones((10, 10))], None, np.zeros((10, 12))),
     ],
 )
-def test_inconsistent_shapes(data_images, darkfield_images, mask):
+def test_inconsistent_shapes(signal_images, background_images, mask):
     """Test that error is raised for inconsistent shapes."""
     with pytest.raises(ValueError):
         BeamImage(
-            data_images=data_images,
-            darkfield_images=darkfield_images,
+            signal_images=signal_images,
+            background_images=background_images,
             mask=mask,
         )
 
@@ -66,13 +66,13 @@ def test_inconsistent_shapes(data_images, darkfield_images, mask):
 def test_non_2d_array():
     """Test that error is raised for non-2D arrays."""
     with pytest.raises(ValueError):
-        BeamImage(data_images=[np.ones((10, 10, 3))])
+        BeamImage(signal_images=[np.ones((10, 10, 3))])
 
 
 def test_too_small_images():
     """Test that error is raised for images smaller than 8x8."""
     with pytest.raises(ValueError):
-        BeamImage(data_images=[np.ones((5, 5))])
+        BeamImage(signal_images=[np.ones((5, 5))])
 
 
 def test_data_cast_to_float64():
@@ -81,10 +81,10 @@ def test_data_cast_to_float64():
     data_int = np.ones((10, 10), dtype=np.int32)
     darkfield_int = np.zeros((10, 10), dtype=np.int32)
 
-    beam = BeamImage(data_images=[data_int], darkfield_images=[darkfield_int])
+    beam = BeamImage(signal_images=[data_int], background_images=[darkfield_int])
 
-    assert beam._data_images[0].dtype == np.float64
-    assert beam._darkfield_images[0].dtype == np.float64
+    assert beam._signal_images[0].dtype == np.float64
+    assert beam._background_images[0].dtype == np.float64
 
 
 def test_background_subtraction():
@@ -100,7 +100,7 @@ def test_background_subtraction():
     dark3 = np.full((10, 10), 3.0)
 
     beam = BeamImage(
-        data_images=[data1, data2, data3], darkfield_images=[dark1, dark2, dark3]
+        signal_images=[data1, data2, data3], background_images=[dark1, dark2, dark3]
     )
 
     result = beam.get_processed()
@@ -121,7 +121,7 @@ def test_mask_works(mask_dtype):
     mask = np.zeros((10, 10), dtype=mask_dtype)
     mask[0:5, 0:5] = 1  # Mask upper-left quadrant
 
-    beam = BeamImage(data_images=[data], mask=mask)
+    beam = BeamImage(signal_images=[data], mask=mask)
     result = beam.get_processed()
 
     # Check that result is masked array
@@ -163,7 +163,7 @@ def test_no_darkfield():
     data1 = np.full((10, 10), 2.0)
     data2 = np.full((10, 10), 4.0)
 
-    beam = BeamImage(data_images=[data1, data2])
+    beam = BeamImage(signal_images=[data1, data2])
     result = beam.get_processed()
 
     # Expected: mean([2, 4]) = 3.0
@@ -174,7 +174,7 @@ def test_no_mask():
     """Test that processing works without a mask."""
     data = np.ones((10, 10))
 
-    beam = BeamImage(data_images=[data])
+    beam = BeamImage(signal_images=[data])
     result = beam.get_processed()
 
     # Check that result is masked array
@@ -188,7 +188,7 @@ def test_pixel_std_error_one_data_no_darkfield():
     """Test get_pixel_std_error() with one data image and no darkfield."""
     data1 = np.full((10, 10), 5.0)
 
-    beam = BeamImage(data_images=[data1])
+    beam = BeamImage(signal_images=[data1])
     with pytest.raises(ValueError):
         beam.get_pixel_std_error()
 
@@ -198,7 +198,7 @@ def test_pixel_std_error_one_data_one_darkfield():
     data1 = np.full((10, 10), 5.0)
     dark1 = np.full((10, 10), 1.0)
 
-    beam = BeamImage(data_images=[data1], darkfield_images=[dark1])
+    beam = BeamImage(signal_images=[data1], background_images=[dark1])
     with pytest.raises(ValueError):
         beam.get_pixel_std_error()
 
@@ -210,7 +210,7 @@ def test_pixel_std_error_one_data_multiple_darkfield():
     dark2 = np.full((10, 10), 2.0)
     dark3 = np.full((10, 10), 3.0)
 
-    beam = BeamImage(data_images=[data1], darkfield_images=[dark1, dark2, dark3])
+    beam = BeamImage(signal_images=[data1], background_images=[dark1, dark2, dark3])
     std_devs = beam.get_pixel_std_error()
 
     # Check no errors and no NaN
@@ -227,7 +227,7 @@ def test_pixel_std_error_multiple_data_no_darkfield():
     data2 = np.full((10, 10), 5.0)
     data3 = np.full((10, 10), 6.0)
 
-    beam = BeamImage(data_images=[data1, data2, data3])
+    beam = BeamImage(signal_images=[data1, data2, data3])
     std_devs = beam.get_pixel_std_error()
 
     # Check no errors and no NaN
@@ -245,7 +245,7 @@ def test_pixel_std_error_multiple_data_one_darkfield():
     data3 = np.full((10, 10), 6.0)
     dark1 = np.full((10, 10), 1.0)
 
-    beam = BeamImage(data_images=[data1, data2, data3], darkfield_images=[dark1])
+    beam = BeamImage(signal_images=[data1, data2, data3], background_images=[dark1])
     std_devs = beam.get_pixel_std_error()
 
     # Check no errors and no NaN
@@ -266,7 +266,7 @@ def test_pixel_std_error_multiple_data_multiple_darkfield():
     dark3 = np.full((10, 10), 3.0)
 
     beam = BeamImage(
-        data_images=[data1, data2, data3], darkfield_images=[dark1, dark2, dark3]
+        signal_images=[data1, data2, data3], background_images=[dark1, dark2, dark3]
     )
     std_devs = beam.get_pixel_std_error()
 

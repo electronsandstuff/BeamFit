@@ -110,7 +110,7 @@ def test_fit_supergaussian(test_data):
 def test_fit_supergaussian_beam_image(test_data):
     # Pull out the test image and validation data
     test_image = beamfit.BeamImage(
-        data_images=[test_data["supergaussian_fit_data"]["images"][0]]
+        signal_images=[test_data["supergaussian_fit_data"]["images"][0]]
     )
 
     # Fit it and Compare
