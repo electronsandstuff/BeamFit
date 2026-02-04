@@ -12,7 +12,7 @@ class BeamImage:
     ):
         """
         All images acquired for a single beam. This includes multiple images of the beam for averaging purposes, background
-        subtraction imagse and a mask to indicate which regions of the image are meant to be included in the analysis.
+        subtraction images and a mask to indicate which regions of the image are meant to be included in the analysis.
 
         Parameters
         ----------
@@ -32,12 +32,12 @@ class BeamImage:
         for idx, img in enumerate(data_images):
             if not isinstance(img, (np.ndarray, np.ma.MaskedArray)):
                 raise ValueError(
-                    f"Data images must np.array or np.ma.array; type(data_images[{idx}])={type(img)}"
+                    f"Data images must np.array or np.ma.MaskedArray; type(data_images[{idx}])={type(img)}"
                 )
         for idx, img in enumerate(darkfield_images):
             if not isinstance(img, (np.ndarray, np.ma.MaskedArray)):
                 raise ValueError(
-                    f"Darkfield images must np.array or np.ma.array; type(darkfield_images[{idx}])={type(img)}"
+                    f"Darkfield images must np.array or np.ma.MaskedArray; type(darkfield_images[{idx}])={type(img)}"
                 )
         if not isinstance(mask, (np.ndarray, type(None))):
             raise ValueError(f"Mask must be None or np.array; type(mask)={type(mask)}")
@@ -115,4 +115,4 @@ class BeamImage:
         """
         Is there enough data for a valid prediction of the pixel sigmas?
         """
-        return (len(self._data_images) > 2) or (len(self._darkfield_images) > 2)
+        return (len(self._data_images) > 1) or (len(self._darkfield_images) > 1)
