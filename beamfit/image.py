@@ -73,10 +73,9 @@ class BeamImage:
         else:
             self._mask = np.ma.nomask
 
-    @property
-    def processed(self) -> np.ma.MaskedArray:
+    def get_processed(self) -> np.ma.MaskedArray:
         """
-        Return the processed image with averaging, background subtraction, and masking applied.
+        Return the get_processed() image with averaging, background subtraction, and masking applied.
 
         Returns
         -------
@@ -94,8 +93,7 @@ class BeamImage:
         # Create masked array
         return np.ma.masked_array(result, mask=self._mask)
 
-    @property
-    def pixel_std_error(self) -> np.ma.MaskedArray:
+    def get_pixel_std_error(self) -> np.ma.MaskedArray:
         """
         Std. deviation of the estimated value of each pixel after averaging and background subtraction.
         """
