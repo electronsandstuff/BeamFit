@@ -285,3 +285,27 @@ class AnalysisResult(BaseModel, ABC):
             The matrix [[std(sigma_xx), std(sigma_xy)], [std(sigma_yx), std(sigma_yy)]]
         """
         return None
+
+    def get_mean_uncertainty(self) -> np.ndarray:
+        """
+        Returns the 2x2 matrix of the estimated covariances of the best fit mean.
+
+        Returns
+        -------
+        np.ndarray
+            Covariance estimate
+        """
+        pass
+
+    def get_covariance_matrix_uncertainty(self) -> np.ndarray:
+        """
+        Returns a 2x2x2x2 tensor containing estimates of the covariances between all elements of the best fit 2x2
+        covariance matrix of the beam. The matrix is organized such that U[i, j, k, l] represents the covariance between
+        the elements C[i, j] and c[k, l] of the beam's covariance matrix.
+
+        Returns
+        -------
+        np.ndarray
+            Covariance estimate
+        """
+        pass
