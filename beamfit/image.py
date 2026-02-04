@@ -57,7 +57,9 @@ class BeamImage:
             if len(shape) != 2:
                 raise ValueError(f"Image arrays must be 2D; image shape: {shape}")
             if (shape[0] < 8) or (shape[1] < 8):
-                raise ValueError(f"Images are too small! Image shape: {shape}")
+                raise ValueError(
+                    f"Images are too small for useful calculations! Minimum set to (8, 8). Image shape: {shape}"
+                )
 
         # Copy (to avoid mutating user data) and cast to float64 np.ndarray (dropping np.ma.array mask if provided)
         self._data_images = [np.array(img, dtype=np.float64) for img in data_images]
