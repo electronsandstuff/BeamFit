@@ -14,6 +14,12 @@ class BeamImage:
         All images acquired for a single beam. This includes multiple images of the beam for averaging purposes, background
         subtraction images and a mask to indicate which regions of the image are meant to be included in the analysis.
 
+        Notes:
+         - Images will be cast to float64 internally.
+         - Initialization with np.ma.MaskedArray in `signal_images` or `background_images` is supported for convenience only.
+           Masks will be dropped. Please supply mask through `mask` argument.
+         - Initialization with images smaller than minimum size (8, 8) will fail to avoid downstream issues.
+
         Parameters
         ----------
         signal_images : list[Union[np.ndarray, np.ma.MaskedArray]]
