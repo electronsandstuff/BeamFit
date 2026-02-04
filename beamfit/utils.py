@@ -28,7 +28,7 @@ def get_image_and_weight(
     Returns
     -------
     np.ndarray, np.ndarray
-        The get_processed() image and its weights
+        The processed image and its weights
     """
     image = np.ma.masked_array(
         data=np.mean(raw_images, axis=0) - np.mean(dark_fields, axis=0), mask=mask

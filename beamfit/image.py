@@ -75,7 +75,7 @@ class BeamImage:
 
     def get_processed(self) -> np.ma.MaskedArray:
         """
-        Return the get_processed() image with averaging, background subtraction, and masking applied.
+        Return the image with averaging, background subtraction, and masking applied.
 
         Returns
         -------
