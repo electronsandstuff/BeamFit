@@ -103,7 +103,7 @@ def test_background_subtraction():
         signal_images=[data1, data2, data3], background_images=[dark1, dark2, dark3]
     )
 
-    result = beam.get_processed()
+    result = beam.get_avg_and_subtracted()
 
     # Expected: mean([4, 5, 6]) - mean([1, 2, 3]) = 5.0 - 2.0 = 3.0
     expected = 3.0
@@ -122,7 +122,7 @@ def test_mask_works(mask_dtype):
     mask[0:5, 0:5] = 1  # Mask upper-left quadrant
 
     beam = BeamImage(signal_images=[data], mask=mask)
-    result = beam.get_processed()
+    result = beam.get_avg_and_subtracted()
 
     # Check that result is masked array
     assert isinstance(result, np.ma.MaskedArray)
@@ -164,7 +164,7 @@ def test_no_darkfield():
     data2 = np.full((10, 10), 4.0)
 
     beam = BeamImage(signal_images=[data1, data2])
-    result = beam.get_processed()
+    result = beam.get_avg_and_subtracted()
 
     # Expected: mean([2, 4]) = 3.0
     assert np.allclose(result, 3.0)
@@ -175,7 +175,7 @@ def test_no_mask():
     data = np.ones((10, 10))
 
     beam = BeamImage(signal_images=[data])
-    result = beam.get_processed()
+    result = beam.get_avg_and_subtracted()
 
     # Check that result is masked array
     assert isinstance(result, np.ma.MaskedArray)
@@ -185,33 +185,33 @@ def test_no_mask():
 
 
 def test_pixel_std_error_one_data_no_darkfield():
-    """Test get_pixel_std_error() with one data image and no darkfield."""
+    """Test get_std_error() with one data image and no darkfield."""
     data1 = np.full((10, 10), 5.0)
 
     beam = BeamImage(signal_images=[data1])
     with pytest.raises(ValueError):
-        beam.get_pixel_std_error()
+        beam.get_std_error()
 
 
 def test_pixel_std_error_one_data_one_darkfield():
-    """Test get_pixel_std_error() with one data image and one darkfield."""
+    """Test get_std_error() with one data image and one darkfield."""
     data1 = np.full((10, 10), 5.0)
     dark1 = np.full((10, 10), 1.0)
 
     beam = BeamImage(signal_images=[data1], background_images=[dark1])
     with pytest.raises(ValueError):
-        beam.get_pixel_std_error()
+        beam.get_std_error()
 
 
 def test_pixel_std_error_one_data_multiple_darkfield():
-    """Test get_pixel_std_error() with one data image and multiple darkfield images."""
+    """Test get_std_error() with one data image and multiple darkfield images."""
     data1 = np.full((10, 10), 5.0)
     dark1 = np.full((10, 10), 1.0)
     dark2 = np.full((10, 10), 2.0)
     dark3 = np.full((10, 10), 3.0)
 
     beam = BeamImage(signal_images=[data1], background_images=[dark1, dark2, dark3])
-    std_devs = beam.get_pixel_std_error()
+    std_devs = beam.get_std_error()
 
     # Check no errors and no NaN
     assert isinstance(std_devs, np.ma.MaskedArray)
@@ -222,13 +222,13 @@ def test_pixel_std_error_one_data_multiple_darkfield():
 
 
 def test_pixel_std_error_multiple_data_no_darkfield():
-    """Test get_pixel_std_error() with multiple data images and no darkfield."""
+    """Test get_std_error() with multiple data images and no darkfield."""
     data1 = np.full((10, 10), 4.0)
     data2 = np.full((10, 10), 5.0)
     data3 = np.full((10, 10), 6.0)
 
     beam = BeamImage(signal_images=[data1, data2, data3])
-    std_devs = beam.get_pixel_std_error()
+    std_devs = beam.get_std_error()
 
     # Check no errors and no NaN
     assert isinstance(std_devs, np.ma.MaskedArray)
@@ -239,14 +239,14 @@ def test_pixel_std_error_multiple_data_no_darkfield():
 
 
 def test_pixel_std_error_multiple_data_one_darkfield():
-    """Test get_pixel_std_error() with multiple data images and one darkfield."""
+    """Test get_std_error() with multiple data images and one darkfield."""
     data1 = np.full((10, 10), 4.0)
     data2 = np.full((10, 10), 5.0)
     data3 = np.full((10, 10), 6.0)
     dark1 = np.full((10, 10), 1.0)
 
     beam = BeamImage(signal_images=[data1, data2, data3], background_images=[dark1])
-    std_devs = beam.get_pixel_std_error()
+    std_devs = beam.get_std_error()
 
     # Check no errors and no NaN
     assert isinstance(std_devs, np.ma.MaskedArray)
@@ -257,7 +257,7 @@ def test_pixel_std_error_multiple_data_one_darkfield():
 
 
 def test_pixel_std_error_multiple_data_multiple_darkfield():
-    """Test get_pixel_std_error() with multiple data and darkfield images."""
+    """Test get_std_error() with multiple data and darkfield images."""
     data1 = np.full((10, 10), 4.0)
     data2 = np.full((10, 10), 5.0)
     data3 = np.full((10, 10), 6.0)
@@ -268,7 +268,7 @@ def test_pixel_std_error_multiple_data_multiple_darkfield():
     beam = BeamImage(
         signal_images=[data1, data2, data3], background_images=[dark1, dark2, dark3]
     )
-    std_devs = beam.get_pixel_std_error()
+    std_devs = beam.get_std_error()
 
     # Check no errors and no NaN
     assert isinstance(std_devs, np.ma.MaskedArray)
