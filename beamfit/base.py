@@ -111,7 +111,7 @@ class AnalysisMethod(BaseModel, ABC):
             raise ValueError(f"Invalid type for `image`: {type(image)}")
 
         # Sanity checks before going on
-        if (len(_img.shape) != 2) or not (_img.shape[0] > 5 and _img.shape[1] > 5):
+        if (len(_img.shape) != 2) or not (_img.shape[0] > 8 and _img.shape[1] > 8):
             raise ValueError(f"Invalid shape for image array: {_img.shape}")
         if (_sigmas is not None) and (
             (_img.shape[0] != _sigmas.shape[0]) or (_img.shape[1] != _sigmas.shape[1])
