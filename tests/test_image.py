@@ -33,11 +33,23 @@ def test_wrong_types(data_images, darkfield_images, mask):
 @pytest.mark.parametrize(
     "data_images,darkfield_images,mask",
     [
-        # Inconsistent shapes in data_images
         ([np.ones((10, 10)), np.ones((10, 12))], None, None),
-        # Inconsistent shape between data and darkfield
         ([np.ones((10, 10))], [np.ones((10, 12))], None),
-        # Inconsistent shape between data and mask
+        (
+            [np.ones((10, 10)), np.ones((10, 12))],
+            [np.ones((10, 10)), np.ones((10, 10))],
+            None,
+        ),
+        (
+            [np.ones((10, 10)), np.ones((10, 10))],
+            [np.ones((10, 10)), np.ones((10, 12))],
+            None,
+        ),
+        (
+            [np.ones((10, 10)), np.ones((10, 10))],
+            [np.ones((10, 10)), np.ones((10, 10))],
+            np.ones((10, 12)),
+        ),
         ([np.ones((10, 10))], None, np.zeros((10, 12))),
     ],
 )
@@ -53,16 +65,14 @@ def test_inconsistent_shapes(data_images, darkfield_images, mask):
 
 def test_non_2d_array():
     """Test that error is raised for non-2D arrays."""
-    data = np.ones((10, 10, 3))
     with pytest.raises(ValueError):
-        BeamImage(data_images=[data])
+        BeamImage(data_images=[np.ones((10, 10, 3))])
 
 
 def test_too_small_images():
     """Test that error is raised for images smaller than 8x8."""
-    data = np.ones((5, 5))
     with pytest.raises(ValueError):
-        BeamImage(data_images=[data])
+        BeamImage(data_images=[np.ones((5, 5))])
 
 
 def test_data_cast_to_float64():
@@ -207,7 +217,6 @@ def test_pixel_std_error_one_data_multiple_darkfield():
     assert isinstance(std_devs, np.ma.MaskedArray)
     assert not np.any(np.isnan(std_devs))
 
-    # Expected: sqrt(std([5])^2 + std([1, 2, 3])^2) = sqrt(0 + std([1, 2, 3])^2)
     expected_std = np.std([1.0, 2.0, 3.0]) / np.sqrt(3)
     assert np.allclose(std_devs, expected_std)
 
@@ -225,7 +234,6 @@ def test_pixel_std_error_multiple_data_no_darkfield():
     assert isinstance(std_devs, np.ma.MaskedArray)
     assert not np.any(np.isnan(std_devs))
 
-    # Expected: sqrt(std([4, 5, 6])^2 + 0^2) = std([4, 5, 6])
     expected_std = np.std([4.0, 5.0, 6.0]) / np.sqrt(3)
     assert np.allclose(std_devs, expected_std)
 
@@ -244,7 +252,6 @@ def test_pixel_std_error_multiple_data_one_darkfield():
     assert isinstance(std_devs, np.ma.MaskedArray)
     assert not np.any(np.isnan(std_devs))
 
-    # Expected: sqrt(std([4, 5, 6])^2 + std([1])^2) = sqrt(std([4, 5, 6])^2 + 0)
     expected_std = np.std([4.0, 5.0, 6.0]) / np.sqrt(3)
     assert np.allclose(std_devs, expected_std)
 
@@ -267,7 +274,6 @@ def test_pixel_std_error_multiple_data_multiple_darkfield():
     assert isinstance(std_devs, np.ma.MaskedArray)
     assert not np.any(np.isnan(std_devs))
 
-    # Expected: sqrt(std([4, 5, 6])^2 + std([1, 2, 3])^2)
     data_std = np.std([4.0, 5.0, 6.0]) / np.sqrt(3)
     dark_std = np.std([1.0, 2.0, 3.0]) / np.sqrt(3)
     expected_std = np.sqrt(data_std**2 + dark_std**2)
