@@ -217,33 +217,15 @@ class SuperGaussianResult(AnalysisResult):
             )
         )
 
-    def get_mean_uncertainty(self) -> np.ndarray:
-        return self.c[:2, :2]
+    def get_fit_covariances(self) -> np.ndarray | None:
+        if self.c is None:
+            return None
 
-    def get_covariance_matrix_uncertainty(self) -> np.ndarray:
-        # Find the Jacobian of the scaling transformation
-        scaling_j = np.identity(4)
-        scaling_j[:3, :3] *= super_gaussian_scaling_factor(self.n)
-        scaling_j[:3, 3] = self.h[2:5] * super_gaussian_scaling_factor_grad(self.n)
+        # Find the Jacobian of the transformation from fit parameters to beam covariance
+        # [mu_x, mu_y, sig_xx, sig_xy, sig_yy, n] -> [mu_x, mu_y, f(n)*sig_xx, f(n)*sig_xy, f(n)*sig_yy]
+        scaling_j = np.identity(6)[:5, :]
+        scaling_j[2:5, 2:5] *= super_gaussian_scaling_factor(self.n)
+        scaling_j[2:5, 5] = self.h[2:5] * super_gaussian_scaling_factor_grad(self.n)
 
         # Get the covariance matrix of our variables
-        sigma_n_cov = self.c[2:6, 2:6]
-
-        # Transform it
-        sigma_n_cov_scaled = scaling_j @ sigma_n_cov @ scaling_j.T
-
-        # Pack into array
-        cov = np.empty((2, 2, 2, 2))
-        cov[0, 0, 0, 0] = sigma_n_cov_scaled[0, 0]
-        cov[0, 0, 0, 1] = cov[0, 0, 1, 0] = cov[0, 1, 0, 0] = cov[1, 0, 0, 0] = (
-            sigma_n_cov_scaled[0, 1]
-        )
-        cov[1, 1, 0, 0] = cov[0, 0, 1, 1] = sigma_n_cov_scaled[0, 2]
-        cov[0, 1, 0, 1] = cov[1, 0, 1, 0] = cov[0, 1, 1, 0] = cov[1, 0, 0, 1] = (
-            sigma_n_cov_scaled[1, 1]
-        )
-        cov[1, 1, 0, 1] = cov[1, 1, 1, 0] = cov[0, 1, 1, 1] = cov[1, 0, 1, 1] = (
-            sigma_n_cov_scaled[1, 2]
-        )
-        cov[1, 1, 1, 1] = sigma_n_cov_scaled[2, 2]
-        return cov
+        return scaling_j @ self.c[:6, :6] @ scaling_j.T

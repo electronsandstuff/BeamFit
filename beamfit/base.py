@@ -286,26 +286,14 @@ class AnalysisResult(BaseModel, ABC):
         """
         return None
 
-    def get_mean_uncertainty(self) -> np.ndarray:
+    def get_fit_covariances(self) -> np.ndarray | None:
         """
-        Returns the 2x2 matrix of the estimated covariances of the best fit mean.
+        Get the estimated covariances between all fit values parameters (or None if not estimated). The result is returned
+        as a 2D covariance matrix with the parameters ordered as [mu_x, mu_y, sig_xx, sig_xy, sig_yy].
 
         Returns
         -------
-        np.ndarray
-            Covariance estimate
+        np.ndarray | None
+            The covariances of the best fit parameters (or None if no estimate)
         """
-        pass
-
-    def get_covariance_matrix_uncertainty(self) -> np.ndarray:
-        """
-        Returns a 2x2x2x2 tensor containing estimates of the covariances between all elements of the best fit 2x2
-        covariance matrix of the beam. The matrix is organized such that U[i, j, k, l] represents the covariance between
-        the elements C[i, j] and c[k, l] of the beam's covariance matrix.
-
-        Returns
-        -------
-        np.ndarray
-            Covariance estimate
-        """
-        pass
+        raise NotImplementedError
