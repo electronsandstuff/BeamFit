@@ -7,6 +7,7 @@ from pydantic import BaseModel, model_validator
 
 from .filters import FilterUnion, SigmaThresholdFilter, MedianFilter
 from .image import BeamImage
+from .exceptions import ImageError, LegacyFilterError
 
 
 @dataclass
@@ -43,7 +44,7 @@ class AnalysisMethod(BaseModel, ABC):
             has_filters = "filters" in data
 
             if has_legacy and has_filters:
-                raise ValueError(
+                raise LegacyFilterError(
                     "Cannot specify both legacy fields (sigma_threshold, median_filter_size) "
                     "and new filters list. Please use only the filters list."
                 )
@@ -90,7 +91,7 @@ class AnalysisMethod(BaseModel, ABC):
         """
         # Handle types for image_sigmas
         if not isinstance(image_sigmas, (type(None), np.ndarray)):
-            raise ValueError(f"Invalid type for `image_sigmas`: {type(image_sigmas)}")
+            raise ImageError(f"Invalid type for `image_sigmas`: {type(image_sigmas)}")
 
         # Handle different image types
         if isinstance(image, BeamImage):
@@ -100,7 +101,7 @@ class AnalysisMethod(BaseModel, ABC):
             else:
                 _sigmas = None
             if image_sigmas is not None:
-                raise ValueError("When image is a `BeamImage`, cannot use image_sigmas")
+                raise ImageError("When image is a `BeamImage`, cannot use image_sigmas")
         elif isinstance(image, np.ndarray):
             _img = np.ma.array(image)
             _sigmas = image_sigmas
@@ -108,17 +109,17 @@ class AnalysisMethod(BaseModel, ABC):
             _img = image
             _sigmas = image_sigmas
         else:
-            raise ValueError(f"Invalid type for `image`: {type(image)}")
+            raise ImageError(f"Invalid type for `image`: {type(image)}")
 
         # Sanity checks before going on
         if (len(_img.shape) != 2) or not (_img.shape[0] > 8 and _img.shape[1] > 8):
-            raise ValueError(f"Invalid shape for image array: {_img.shape}")
+            raise ImageError(f"Invalid shape for image array: {_img.shape}")
         if (_sigmas is not None) and (
             (len(_img.shape) != len(_sigmas.shape))
             or (_img.shape[0] != _sigmas.shape[0])
             or (_img.shape[1] != _sigmas.shape[1])
         ):
-            raise ValueError(
+            raise ImageError(
                 f"Image and sigmas array must match in shape (_img.shape={_img.shape}, _sigmas.shape={_sigmas.shape})"
             )
 

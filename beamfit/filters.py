@@ -6,6 +6,8 @@ from typing_extensions import Annotated
 from abc import ABC
 from pydantic import BaseModel, Field, model_validator, Discriminator
 
+from .exceptions import FilterError
+
 
 class ImageFilter(BaseModel, ABC):
     """
@@ -59,7 +61,7 @@ class MedianFilter(ImageFilter):
     def validate_kernel_size(self):
         """Ensure kernel size is odd."""
         if self.kernel_size % 2 == 0:
-            raise ValueError(
+            raise FilterError(
                 f"Median filter kernel size must be odd, got {self.kernel_size}"
             )
         return self
