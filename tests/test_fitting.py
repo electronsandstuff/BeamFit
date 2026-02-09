@@ -355,6 +355,39 @@ def test_supergaussian_result_get_uncertainty_matrix_none():
     assert result.get_uncertainty_matrix() is None
 
 
+def test_supergaussian_result_get_mean_std():
+    """Test that get_mean_std returns sensible uncertainties on the centroid"""
+    mu = np.array([128.0, 256.0])
+    sigma = np.array([[50.0, 5.0], [5.0, 40.0]])
+
+    rng = np.random.default_rng(42)
+    L = rng.standard_normal((8, 8))
+    c = L @ L.T + np.eye(8)
+
+    result = beamfit.SuperGaussianResult(mu=mu, sigma=sigma, n=1.2, a=0.95, o=0.05, c=c)
+    std = result.get_mean_std()
+
+    assert std.shape == (2,)
+    assert np.all(std > 0)
+    np.testing.assert_allclose(std, np.sqrt([c[0, 0], c[1, 1]]))
+
+
+def test_supergaussian_result_get_covariance_matrix_std():
+    """Test that get_covariance_matrix_std returns sensible uncertainties on the covariance"""
+    mu = np.array([128.0, 256.0])
+    sigma = np.array([[50.0, 5.0], [5.0, 40.0]])
+
+    rng = np.random.default_rng(42)
+    L = rng.standard_normal((8, 8))
+    c = L @ L.T + np.eye(8)
+
+    result = beamfit.SuperGaussianResult(mu=mu, sigma=sigma, n=1.2, a=0.95, o=0.05, c=c)
+    std = result.get_covariance_matrix_std()
+
+    assert std.shape == (2, 2)
+    assert np.all(std > 0)
+
+
 def test_supergaussian_result_json_serialization():
     """Test SuperGaussianResult JSON serialization and deserialization"""
     # Create a result with test data
