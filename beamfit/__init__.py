@@ -25,6 +25,7 @@ from .utils import (
     super_gaussian_scaling_factor,
     super_gaussian_scaling_factor_grad,
     SuperGaussianResult,
+    DummyResult,
 )
 from .methods.supergaussian.sigma_transformations import (
     Cholesky,
@@ -41,6 +42,11 @@ from .methods.debug import AnalysisMethodDebugger
 
 AnalysisMethodUnion = Annotated[
     Union[GaussianProfile1D, GaussianLinearLeastSquares, SuperGaussian, RMSIntegration],
+    Discriminator("type"),
+]
+
+AnalysisResultUnion = Annotated[
+    Union[SuperGaussianResult, DummyResult],
     Discriminator("type"),
 ]
 
@@ -105,4 +111,6 @@ __all__ = [
     "create_analysis",
     "BeamImage",
     "AnalysisMethodUnion",
+    "DummyResult",
+    "AnalysisResultUnion",
 ]

@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy as np
 import scipy.special as special
-from typing import Any
+from typing import Any, Literal
 from pydantic import field_validator, model_validator, Field
 
 from . import factory
@@ -102,6 +102,9 @@ class SuperGaussianResult(AnalysisResult):
     Represents the results of a fitting process where the model takes the form of a supergaussian (or gaussian where
     `n` is set to 1)
     """
+
+    # For discriminator field
+    type: Literal["supergaussian_result"] = "supergaussian_result"
 
     # Parameters of best fit
     mu: NumpyArray = Field(description="Centroid of distribution (x, y)")
@@ -206,3 +209,8 @@ class SuperGaussianResult(AnalysisResult):
 
         # Get the covariance matrix of our variables
         return scaling_j @ self.c[:6, :6] @ scaling_j.T
+
+
+class DummyResult(AnalysisResult):
+    # For discriminator field
+    type: Literal["dummy_result"] = "dummy_result"
