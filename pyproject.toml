@@ -36,4 +36,4 @@ Repository = "https://github.com/electronsandstuff/Beamfit"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-# Will find packages automatically
+where = ["src"]
