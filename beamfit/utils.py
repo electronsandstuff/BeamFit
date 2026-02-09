@@ -194,29 +194,6 @@ class SuperGaussianResult(AnalysisResult):
     def get_covariance_matrix(self):
         return self.sigma * super_gaussian_scaling_factor(self.n)
 
-    def get_mean_std(self):
-        return np.sqrt(np.array([self.c[0, 0], self.c[1, 1]]))
-
-    def get_covariance_matrix_std(self):
-        # Find the Jacobian of the scaling transformation
-        scaling_j = np.identity(4)
-        scaling_j[:3, :3] *= super_gaussian_scaling_factor(self.n)
-        scaling_j[:3, 3] = self.h[2:5] * super_gaussian_scaling_factor_grad(self.n)
-
-        # Get the covariance matrix of our variables
-        sigma_n_cov = self.c[2:6, 2:6]
-
-        # Transform it
-        sigma_n_cov_scaled = scaling_j @ sigma_n_cov @ scaling_j.T
-        return np.sqrt(
-            np.array(
-                [
-                    [sigma_n_cov_scaled[0, 0], sigma_n_cov_scaled[1, 1]],
-                    [sigma_n_cov_scaled[1, 1], sigma_n_cov_scaled[2, 2]],
-                ]
-            )
-        )
-
     def get_uncertainty_matrix(self) -> np.ndarray | None:
         if self.c is None:
             return None

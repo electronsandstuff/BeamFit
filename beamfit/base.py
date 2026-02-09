@@ -273,7 +273,10 @@ class AnalysisResult(BaseModel, ABC):
         np.ndarray
             The vector [std(mu_x), std(mu_y)]
         """
-        return None
+        cov = self.get_uncertainty_matrix()
+        if cov is not None:
+            cov = np.sqrt(np.diag(cov)[:2])
+        return cov
 
     def get_covariance_matrix_std(self) -> np.ndarray:
         """
@@ -284,7 +287,11 @@ class AnalysisResult(BaseModel, ABC):
         np.ndarray
             The matrix [[std(sigma_xx), std(sigma_xy)], [std(sigma_yx), std(sigma_yy)]]
         """
-        return None
+        cov = self.get_uncertainty_matrix()
+        if cov is not None:
+            cov = np.sqrt(np.diag(cov)[2:])
+            cov = np.array([[cov[0], cov[1]], [cov[1], cov[2]]])
+        return cov
 
     def get_uncertainty_matrix(self) -> np.ndarray | None:
         """
