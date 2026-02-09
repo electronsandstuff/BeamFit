@@ -325,11 +325,10 @@ def test_supergaussian_result_get_uncertainty_matrix():
     sigma = np.array([[50.0, 5.0], [5.0, 40.0]])
     n = 1.2
 
-    # Build a positive-definite 8x8 covariance matrix for the fit parameters
+    # Build 8x8 covariance matrix for the fit parameters
     rng = np.random.default_rng(42)
     L = rng.standard_normal((8, 8))
-    c = L @ L.T + np.eye(8)  # guaranteed positive definite
-
+    c = L @ L.T + np.eye(8)
     result = beamfit.SuperGaussianResult(mu=mu, sigma=sigma, n=n, a=0.95, o=0.05, c=c)
     cov = result.get_uncertainty_matrix()
 
@@ -339,11 +338,9 @@ def test_supergaussian_result_get_uncertainty_matrix():
     # Should be symmetric
     np.testing.assert_allclose(cov, cov.T, atol=1e-12)
 
-    # Should be positive semi-definite (all eigenvalues >= 0)
+    # Should be positive semi-definite
     eigvals = np.linalg.eigvalsh(cov)
     assert np.all(eigvals >= -1e-12)
-
-    # Diagonal entries (variances) should be positive
     assert np.all(np.diag(cov) > 0)
 
 
