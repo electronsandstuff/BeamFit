@@ -217,7 +217,7 @@ class SuperGaussianResult(AnalysisResult):
             )
         )
 
-    def get_fit_covariances(self) -> np.ndarray | None:
+    def get_uncertainty_matrix(self) -> np.ndarray | None:
         if self.c is None:
             return None
 

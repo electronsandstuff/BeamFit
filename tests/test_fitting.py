@@ -318,8 +318,8 @@ def test_supergaussian_result_h_property():
     assert result.o == 0.05
 
 
-def test_supergaussian_result_get_fit_covariances():
-    """Test that get_fit_covariances runs and returns sensible output"""
+def test_supergaussian_result_get_uncertainty_matrix():
+    """Test that get_uncertainty_matrix runs and returns sensible output"""
     # Create a result with realistic-ish parameters
     mu = np.array([128.0, 256.0])
     sigma = np.array([[50.0, 5.0], [5.0, 40.0]])
@@ -331,7 +331,7 @@ def test_supergaussian_result_get_fit_covariances():
     c = L @ L.T + np.eye(8)  # guaranteed positive definite
 
     result = beamfit.SuperGaussianResult(mu=mu, sigma=sigma, n=n, a=0.95, o=0.05, c=c)
-    cov = result.get_fit_covariances()
+    cov = result.get_uncertainty_matrix()
 
     # Should be a 5x5 matrix: [mu_x, mu_y, sig_xx, sig_xy, sig_yy]
     assert cov.shape == (5, 5)
@@ -347,12 +347,12 @@ def test_supergaussian_result_get_fit_covariances():
     assert np.all(np.diag(cov) > 0)
 
 
-def test_supergaussian_result_get_fit_covariances_none():
-    """Test that get_fit_covariances returns None when c is not provided"""
+def test_supergaussian_result_get_uncertainty_matrix_none():
+    """Test that get_uncertainty_matrix returns None when c is not provided"""
     mu = np.array([128.0, 256.0])
     sigma = np.array([[50.0, 5.0], [5.0, 40.0]])
     result = beamfit.SuperGaussianResult(mu=mu, sigma=sigma)
-    assert result.get_fit_covariances() is None
+    assert result.get_uncertainty_matrix() is None
 
 
 def test_supergaussian_result_json_serialization():

@@ -286,7 +286,7 @@ class AnalysisResult(BaseModel, ABC):
         """
         return None
 
-    def get_fit_covariances(self) -> np.ndarray | None:
+    def get_uncertainty_matrix(self) -> np.ndarray | None:
         """
         Get the estimated covariances between all fit values parameters (or None if not estimated). The result is returned
         as a 2D covariance matrix with the parameters ordered as [mu_x, mu_y, sig_xx, sig_xy, sig_yy].
