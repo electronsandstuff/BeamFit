@@ -1,3 +1,7 @@
+from typing import Annotated, Union
+
+from pydantic import Discriminator
+
 from .factory import register, create, unregister, get_names
 from .fit_param_conversion import get_mu_sigma, get_mu_sigma_std
 from .image import BeamImage
@@ -21,6 +25,7 @@ from .utils import (
     super_gaussian_scaling_factor,
     super_gaussian_scaling_factor_grad,
     SuperGaussianResult,
+    DummyResult,
 )
 from .methods.supergaussian.sigma_transformations import (
     Cholesky,
@@ -34,6 +39,16 @@ from .methods.supergaussian.sigma_transformations import (
 from .methods.rms_integration import RMSIntegration
 from .methods.supergaussian import supergaussian, supergaussian_grad
 from .methods.debug import AnalysisMethodDebugger
+
+AnalysisMethodUnion = Annotated[
+    Union[GaussianProfile1D, GaussianLinearLeastSquares, SuperGaussian, RMSIntegration],
+    Discriminator("type"),
+]
+
+AnalysisResultUnion = Annotated[
+    Union[SuperGaussianResult, DummyResult],
+    Discriminator("type"),
+]
 
 # Register all analysis methods to the factory
 for o in [GaussianProfile1D, GaussianLinearLeastSquares, SuperGaussian, RMSIntegration]:
@@ -95,4 +110,7 @@ __all__ = [
     "get_analysis_names",
     "create_analysis",
     "BeamImage",
+    "AnalysisMethodUnion",
+    "DummyResult",
+    "AnalysisResultUnion",
 ]
