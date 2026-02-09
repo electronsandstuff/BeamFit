@@ -1,11 +1,12 @@
 import numpy as np
 import pytest
 from beamfit.image import BeamImage
+from beamfit.exceptions import ImageError, UncertaintyEstimateError
 
 
 def test_no_data_images():
     """Test that error is raised when no data images are provided."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ImageError):
         BeamImage(signal_images=[])
 
 
@@ -22,7 +23,7 @@ def test_no_data_images():
 )
 def test_wrong_types(signal_images, background_images, mask):
     """Test that error is raised for wrong types."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ImageError):
         BeamImage(
             signal_images=signal_images,
             background_images=background_images,
@@ -55,7 +56,7 @@ def test_wrong_types(signal_images, background_images, mask):
 )
 def test_inconsistent_shapes(signal_images, background_images, mask):
     """Test that error is raised for inconsistent shapes."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ImageError):
         BeamImage(
             signal_images=signal_images,
             background_images=background_images,
@@ -65,13 +66,13 @@ def test_inconsistent_shapes(signal_images, background_images, mask):
 
 def test_non_2d_array():
     """Test that error is raised for non-2D arrays."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ImageError):
         BeamImage(signal_images=[np.ones((10, 10, 3))])
 
 
 def test_too_small_images():
     """Test that error is raised for images smaller than 8x8."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ImageError):
         BeamImage(signal_images=[np.ones((5, 5))])
 
 
@@ -189,7 +190,7 @@ def test_pixel_std_error_one_data_no_darkfield():
     data1 = np.full((10, 10), 5.0)
 
     beam = BeamImage(signal_images=[data1])
-    with pytest.raises(ValueError):
+    with pytest.raises(UncertaintyEstimateError):
         beam.get_std_error()
 
 
@@ -199,7 +200,7 @@ def test_pixel_std_error_one_data_one_darkfield():
     dark1 = np.full((10, 10), 1.0)
 
     beam = BeamImage(signal_images=[data1], background_images=[dark1])
-    with pytest.raises(ValueError):
+    with pytest.raises(UncertaintyEstimateError):
         beam.get_std_error()
 
 
