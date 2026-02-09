@@ -1,3 +1,5 @@
+from .exceptions import FactoryError
+
 registered_objects = {}
 
 
@@ -17,7 +19,7 @@ def register(objtype: str, name: str, createfun: callable):
     if objtype not in registered_objects:
         registered_objects[objtype] = {}
     if name in registered_objects[objtype]:
-        raise ValueError(f"Name '{name}' of type '{objtype}' is already registered")
+        raise FactoryError(f"Name '{name}' of type '{objtype}' is already registered")
     registered_objects[objtype][name] = createfun
 
 

@@ -1,6 +1,8 @@
 import numpy as np
 from typing import Union
 
+from .exceptions import ImageError, UncertaintyEstimateError
+
 
 class BeamImage:
     def __init__(
@@ -32,21 +34,21 @@ class BeamImage:
         if background_images is None:
             background_images = []
         if len(signal_images) < 1:
-            raise ValueError("Must supply at least one data image")
+            raise ImageError("Must supply at least one data image")
 
         # Type checks
         for idx, img in enumerate(signal_images):
             if not isinstance(img, (np.ndarray, np.ma.MaskedArray)):
-                raise ValueError(
+                raise ImageError(
                     f"Data images must np.array or np.ma.MaskedArray; type(signal_images[{idx}])={type(img)}"
                 )
         for idx, img in enumerate(background_images):
             if not isinstance(img, (np.ndarray, np.ma.MaskedArray)):
-                raise ValueError(
+                raise ImageError(
                     f"Darkfield images must np.array or np.ma.MaskedArray; type(background_images[{idx}])={type(img)}"
                 )
         if not isinstance(mask, (np.ndarray, type(None))):
-            raise ValueError(f"Mask must be None or np.array; type(mask)={type(mask)}")
+            raise ImageError(f"Mask must be None or np.array; type(mask)={type(mask)}")
 
         # Check all image shapes
         img_shapes_list = [img.shape for img in signal_images] + [
@@ -56,14 +58,14 @@ class BeamImage:
             img_shapes_list.append(mask.shape)
         img_shapes = set(img_shapes_list)
         if len(img_shapes) > 1:
-            raise ValueError(
+            raise ImageError(
                 f"All image arrays must have the same shape, detected image shapes: {img_shapes}"
             )
         for shape in img_shapes:
             if len(shape) != 2:
-                raise ValueError(f"Image arrays must be 2D; image shape: {shape}")
+                raise ImageError(f"Image arrays must be 2D; image shape: {shape}")
             if (shape[0] < 8) or (shape[1] < 8):
-                raise ValueError(
+                raise ImageError(
                     f"Images are too small for useful calculations! Minimum set to (8, 8). Image shape: {shape}"
                 )
 
@@ -104,7 +106,9 @@ class BeamImage:
         Std. deviation of the estimated value of each pixel after averaging and background subtraction.
         """
         if not self.can_estimate_variance:
-            raise ValueError("There is not enough data to estimate pixel variances")
+            raise UncertaintyEstimateError(
+                "There is not enough data to estimate pixel variances"
+            )
 
         # Calculate variance
         var = np.var(self._signal_images, axis=0) / len(self._signal_images)
